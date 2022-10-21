@@ -58,9 +58,7 @@ func (t *TokenRefresher) checkAccessToken() {
 			t.log.Infof("Received signal to stop token updates.")
 			return
 		default:
-			currentTimestamp := time.Now().Unix()
-			expireTimestamp := t.ExpireTimestamp.Load()
-			secondsToWait := expireTimestamp - currentTimestamp
+			secondsToWait := secondsUntilExpired(t.ExpireTimestamp.Load())
 			if secondsToWait <= 5 {
 				if err := t.fetchNewToken(); err != nil {
 					t.log.Errorf(err.Error())
@@ -68,10 +66,8 @@ func (t *TokenRefresher) checkAccessToken() {
 			} else {
 				time.Sleep(time.Duration(secondsToWait-5) * time.Second)
 			}
-			t.checkAccessToken()
 		}
 	}
-
 }
 
 func (t *TokenRefresher) GetAccessToken() string {
@@ -117,4 +113,9 @@ func (t *TokenRefresher) fetchNewToken() error {
 		t.ExpireTimestamp.Swap(expireTimestamp.Unix())
 	}
 	return nil
+}
+
+func secondsUntilExpired(unixTimestamp int64) int64 {
+	currentTimestamp := time.Now().Unix()
+	return unixTimestamp - currentTimestamp
 }
