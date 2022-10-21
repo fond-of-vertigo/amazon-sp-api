@@ -19,9 +19,17 @@ type Config struct {
 
 type SellingPartnerClient struct {
 	tokenRefresher *TokenRefresher
+	quitSignal     chan bool
+}
+
+// Close stops the TokenRefresher thread
+func (s *SellingPartnerClient) Close() {
+	s.quitSignal <- true
 }
 
 func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
+	quitSignal := make(chan bool)
+
 	tokenRefresher, err := NewTokenRefresher(TokenRefresherConfig{
 		RefreshToken: config.RefreshToken,
 		ClientID:     config.ClientID,
@@ -32,5 +40,5 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 		return nil, err
 	}
 
-	return &SellingPartnerClient{tokenRefresher: tokenRefresher}, nil
+	return &SellingPartnerClient{tokenRefresher: tokenRefresher, quitSignal: quitSignal}, nil
 }

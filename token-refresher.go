@@ -16,6 +16,7 @@ type TokenRefresherConfig struct {
 	ClientID     string
 	ClientSecret string
 	Logger       logger.Logger
+	QuitSignal   chan bool
 }
 
 type TokenRefresher struct {
@@ -23,6 +24,7 @@ type TokenRefresher struct {
 	ExpireTimestamp *atomic.Int64
 	config          TokenRefresherConfig
 	log             logger.Logger
+	quitSignal      chan bool
 }
 type AccessTokenResponse struct {
 	AccessToken      string `json:"access_token"`
@@ -34,7 +36,11 @@ type AccessTokenResponse struct {
 }
 
 func NewTokenRefresher(config TokenRefresherConfig) (*TokenRefresher, error) {
-	tokenRefresher := TokenRefresher{config: config, log: config.Logger}
+	tokenRefresher := TokenRefresher{
+		config:     config,
+		log:        config.Logger,
+		quitSignal: config.QuitSignal,
+	}
 	if err := tokenRefresher.fetchNewToken(); err != nil {
 		return nil, fmt.Errorf("accesstoken could not be fetched: %w", err)
 	}
@@ -46,17 +52,26 @@ func (t *TokenRefresher) StartUpdatesInBackground() {
 }
 
 func (t *TokenRefresher) checkAccessToken() {
-	currentTimestamp := time.Now().Unix()
-	expireTimestamp := t.ExpireTimestamp.Load()
-	secondsToWait := expireTimestamp - currentTimestamp
-	if secondsToWait <= 5 {
-		if err := t.fetchNewToken(); err != nil {
-			t.log.Errorf(err.Error())
+	for {
+		select {
+		case <-t.quitSignal:
+			t.log.Infof("Received signal to stop token updates.")
+			return
+		default:
+			currentTimestamp := time.Now().Unix()
+			expireTimestamp := t.ExpireTimestamp.Load()
+			secondsToWait := expireTimestamp - currentTimestamp
+			if secondsToWait <= 5 {
+				if err := t.fetchNewToken(); err != nil {
+					t.log.Errorf(err.Error())
+				}
+			} else {
+				time.Sleep(time.Duration(secondsToWait-5) * time.Second)
+			}
+			t.checkAccessToken()
 		}
-	} else {
-		time.Sleep(time.Duration(secondsToWait-5) * time.Second)
 	}
-	t.checkAccessToken()
+
 }
 
 func (t *TokenRefresher) GetAccessToken() string {
