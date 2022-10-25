@@ -42,6 +42,7 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 	if err != nil {
 		return nil, err
 	}
+	t.RunInBackground()
 
 	httpClient := httpClient{HttpClient: &http.Client{}, TokenUpdater: t}
 	return &SellingPartnerClient{
