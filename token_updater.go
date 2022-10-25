@@ -26,7 +26,9 @@ type TokenUpdaterInterface interface {
 type TokenUpdater struct {
 	accessToken     *atomic.Value
 	ExpireTimestamp *atomic.Int64
-	config          TokenUpdaterConfig
+	refreshToken    string
+	clientID        string
+	clientSecret    string
 	log             logger.Logger
 	quitSignal      chan bool
 }
@@ -39,20 +41,27 @@ type AccessTokenResponse struct {
 	ErrorDescription string `json:"error_description"`
 }
 
-func NewTokenUpdater(config TokenUpdaterConfig) (*TokenUpdater, error) {
+func NewTokenUpdater(config TokenUpdaterConfig) *TokenUpdater {
 	t := TokenUpdater{
-		config:     config,
-		log:        config.Logger,
-		quitSignal: config.QuitSignal,
+		refreshToken: config.RefreshToken,
+		clientID:     config.ClientID,
+		clientSecret: config.ClientSecret,
+		log:          config.Logger,
+		quitSignal:   config.QuitSignal,
 	}
-	if err := t.fetchNewToken(); err != nil {
-		return nil, fmt.Errorf("accesstoken could not be fetched: %w", err)
-	}
-	return &t, nil
+	return &t
 }
 
-func (t *TokenUpdater) RunInBackground() {
+func (t *TokenUpdater) RunInBackground() error {
+	t.ExpireTimestamp = &atomic.Int64{}
+	t.accessToken = &atomic.Value{}
+	t.log.Debugf("Fetching first Token")
+	if err := t.fetchNewToken(); err != nil {
+		return err
+	}
+
 	go t.checkAccessToken()
+	return nil
 }
 
 func (t *TokenUpdater) checkAccessToken() {
@@ -81,9 +90,9 @@ func (t *TokenUpdater) GetAccessToken() string {
 func (t *TokenUpdater) fetchNewToken() error {
 	reqBody, _ := json.Marshal(map[string]string{
 		"grant_type":    "refresh_token",
-		"refresh_token": t.config.RefreshToken,
-		"client_id":     t.config.ClientID,
-		"client_secret": t.config.ClientSecret,
+		"refresh_token": t.refreshToken,
+		"client_id":     t.clientID,
+		"client_secret": t.clientSecret,
 	})
 
 	resp, err := http.Post(

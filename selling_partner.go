@@ -31,16 +31,12 @@ func (s *SellingPartnerClient) Close() {
 func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 	quitSignal := make(chan bool)
 
-	t, err := NewTokenUpdater(TokenUpdaterConfig{
+	t := NewTokenUpdater(TokenUpdaterConfig{
 		RefreshToken: config.RefreshToken,
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
 		Logger:       config.Log,
 	})
-	if err != nil {
-		return nil, err
-	}
-
 	if err := t.RunInBackground(); err != nil {
 		return nil, err
 	}
