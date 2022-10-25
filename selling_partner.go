@@ -4,7 +4,6 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
 	"github.com/fond-of-vertigo/logger"
 	"net/http"
-	"net/url"
 )
 
 type Config struct {
@@ -15,7 +14,7 @@ type Config struct {
 	IAMUserSecretKey   string
 	Region             string
 	RoleArn            string
-	Endpoint           url.URL
+	Endpoint           string
 	Log                logger.Logger
 }
 
@@ -41,10 +40,14 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	t.RunInBackground()
+
+	if err := t.RunInBackground(); err != nil {
+		return nil, err
+	}
 
 	httpConfig := HttpClientConfig{
 		client:             &http.Client{},
+		Endpoint:           config.Endpoint,
 		TokenUpdater:       t,
 		IAMUserAccessKeyID: config.IAMUserAccessKeyID,
 		IAMUserSecretKey:   config.IAMUserSecretKey,

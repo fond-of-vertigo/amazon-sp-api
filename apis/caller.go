@@ -11,6 +11,7 @@ import (
 
 type HttpRequestDoer interface {
 	Do(*http.Request) (*http.Response, error)
+	GetEndpoint() string
 }
 
 type APICall struct {
@@ -39,6 +40,8 @@ func CallAPIIgnoreResponse(callParams APICall, httpClient HttpRequestDoer) error
 }
 
 func CallAPI(callParams APICall, httpClient HttpRequestDoer) (*http.Response, []byte, error) {
+	callParams.APIPath = httpClient.GetEndpoint() + callParams.APIPath
+
 	req, err := createNewRequest(callParams)
 	if err != nil {
 		return nil, nil, err
@@ -58,7 +61,7 @@ func createNewRequest(callParams APICall) (*http.Request, error) {
 	}
 	apiPath.RawQuery = callParams.QueryParams.Encode()
 
-	return http.NewRequest(callParams.Method, apiPath.RawPath, bytes.NewReader(callParams.Body))
+	return http.NewRequest(callParams.Method, apiPath.String(), bytes.NewBuffer(callParams.Body))
 }
 
 func executeRequest(err error, httpClient HttpRequestDoer, req *http.Request) (*http.Response, []byte, error) {

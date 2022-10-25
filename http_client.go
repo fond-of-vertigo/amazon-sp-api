@@ -21,6 +21,7 @@ type HttpClientConfig struct {
 	IAMUserSecretKey   string
 	Region             string
 	RoleArn            string
+	Endpoint           string
 }
 
 func NewHttpClient(config HttpClientConfig) (client *HttpClient, err error) {
@@ -29,6 +30,7 @@ func NewHttpClient(config HttpClientConfig) (client *HttpClient, err error) {
 		tokenUpdater: config.TokenUpdater,
 		region:       config.Region,
 		roleArn:      config.RoleArn,
+		endpoint:     config.Endpoint,
 	}
 	c.awsSession, err = session.NewSession(
 		&aws.Config{Credentials: credentials.NewStaticCredentials(config.IAMUserAccessKeyID, config.IAMUserSecretKey, "")},
@@ -38,6 +40,7 @@ func NewHttpClient(config HttpClientConfig) (client *HttpClient, err error) {
 
 type HttpClient struct {
 	client            *http.Client
+	endpoint          string
 	tokenUpdater      TokenUpdaterInterface
 	region            string
 	roleArn           string
@@ -54,6 +57,10 @@ func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	return h.client.Do(req)
+}
+
+func (h *HttpClient) GetEndpoint() string {
+	return h.endpoint
 }
 
 func (h *HttpClient) addAccessToken(req *http.Request) {
