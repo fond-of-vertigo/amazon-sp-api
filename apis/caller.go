@@ -64,7 +64,7 @@ func executeRequest(err error, httpClient HttpRequestDoer, req *http.Request) (*
 	bodyBytes, err := io.ReadAll(resp.Body)
 
 	if resp.StatusCode >= 400 {
-		var errorList reports.ErrorList
+		var errorList ErrorList
 		if err = json.Unmarshal(bodyBytes, &errorList); err != nil {
 			return nil, nil, fmt.Errorf("could not unmarshal ErrorList %w", err)
 		}
