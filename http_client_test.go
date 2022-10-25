@@ -50,9 +50,9 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &httpClient{
-				HttpClient:   tt.fields.HttpClient,
-				TokenUpdater: tt.fields.TokenUpdater,
+			h := &HttpClient{
+				client:       tt.fields.HttpClient,
+				tokenUpdater: tt.fields.TokenUpdater,
 			}
 			h.addAccessToken(tt.req)
 			if tt.req.Header.Get("X-Amz-Access-Token") != tt.wantAccessToken {

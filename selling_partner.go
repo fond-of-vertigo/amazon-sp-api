@@ -43,9 +43,21 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 	}
 	t.RunInBackground()
 
-	httpClient := httpClient{HttpClient: &http.Client{}, TokenUpdater: t}
+	httpConfig := HttpClientConfig{
+		client:             &http.Client{},
+		TokenUpdater:       t,
+		IAMUserAccessKeyID: config.IAMUserAccessKeyID,
+		IAMUserSecretKey:   config.IAMUserSecretKey,
+		Region:             config.Region,
+		RoleArn:            config.RoleArn,
+	}
+	httpClient, err := NewHttpClient(httpConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	return &SellingPartnerClient{
 		quitSignal: quitSignal,
-		Report:     reports.Report{HttpClient: &httpClient},
+		Report:     reports.Report{HttpClient: httpClient},
 	}, nil
 }
