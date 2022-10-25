@@ -43,7 +43,7 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 		return nil, err
 	}
 
-	httpClient := http.Client{}
+	httpClient := httpClient{HttpClient: &http.Client{}, TokenRefresher: tokenRefresher}
 	return &SellingPartnerClient{
 		tokenRefresher: tokenRefresher,
 		quitSignal:     quitSignal,
