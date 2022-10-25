@@ -19,7 +19,7 @@ type APICall struct {
 	QueryParams url.Values
 	Body        []byte
 	// RestrictedDataToken is optional and can be passed to replace the existing accessToken
-	RestrictedDataToken string
+	RestrictedDataToken *string
 }
 
 func CallAPIWithResponseType[responseType any](callParams APICall, httpClient HttpRequestDoer) (*responseType, error) {
@@ -44,8 +44,8 @@ func CallAPI(callParams APICall, httpClient HttpRequestDoer) (*http.Response, []
 		return nil, nil, err
 	}
 
-	if callParams.RestrictedDataToken != "" {
-		req.Header.Add("X-Amz-Access-Token", callParams.RestrictedDataToken)
+	if callParams.RestrictedDataToken != nil && *callParams.RestrictedDataToken != "" {
+		req.Header.Add("X-Amz-Access-Token", *callParams.RestrictedDataToken)
 	}
 
 	return executeRequest(err, httpClient, req)

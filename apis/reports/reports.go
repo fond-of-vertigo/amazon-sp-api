@@ -100,9 +100,11 @@ func (r *Report) CancelReportSchedule(reportScheduleId string) error {
 }
 
 // GetReportDocument returns the information required for retrieving a report document's contents.
-func (r *Report) GetReportDocument(reportDocumentId string) (*ReportDocument, error) {
+// a restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
+func (r *Report) GetReportDocument(reportDocumentId string, restrictedDataToken *string) (*ReportDocument, error) {
 	params := apis.APICall{}
 	params.Method = "GET"
 	params.APIPath = config.routePrefix() + "/documents/" + reportDocumentId
+	params.RestrictedDataToken = restrictedDataToken
 	return apis.CallAPIWithResponseType[ReportDocument](params, r.HttpClient)
 }
