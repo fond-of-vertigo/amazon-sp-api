@@ -20,9 +20,8 @@ type Config struct {
 }
 
 type SellingPartnerClient struct {
-	tokenUpdater *TokenUpdater
-	quitSignal   chan bool
-	Report       reports.Report
+	quitSignal chan bool
+	Report     reports.Report
 }
 
 // Close stops the TokenUpdater thread
@@ -46,8 +45,7 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 
 	httpClient := httpClient{HttpClient: &http.Client{}, TokenUpdater: t}
 	return &SellingPartnerClient{
-		tokenUpdater: t,
-		quitSignal:   quitSignal,
-		Report:       reports.Report{HttpClient: &httpClient},
+		quitSignal: quitSignal,
+		Report:     reports.Report{HttpClient: &httpClient},
 	}, nil
 }
