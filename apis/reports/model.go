@@ -5,6 +5,7 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // ReportModel Detailed information about the report.
@@ -16,19 +17,19 @@ type ReportModel struct {
 	// The report type.
 	ReportType string `json:"reportType"`
 	// The start of a date and time range used for selecting the data to report.
-	DataStartTime *apis.JsonTimeISO8601 `json:"dataStartTime,omitempty"`
+	DataStartTime *time.Time `json:"dataStartTime,omitempty"`
 	// The end of a date and time range used for selecting the data to report.
-	DataEndTime *apis.JsonTimeISO8601 `json:"dataEndTime,omitempty"`
+	DataEndTime *time.Time `json:"dataEndTime,omitempty"`
 	// The identifier of the report schedule that created this report (if any). This identifier is unique only in combination with a seller ID.
 	ReportScheduleId *string `json:"reportScheduleId,omitempty"`
 	// The date and time when the report was created.
-	CreatedTime apis.JsonTimeISO8601 `json:"createdTime"`
+	CreatedTime time.Time `json:"createdTime"`
 	// The processing status of the report.
 	ProcessingStatus string `json:"processingStatus"`
 	// The date and time when the report processing started, in ISO 8601 date time format.
-	ProcessingStartTime *apis.JsonTimeISO8601 `json:"processingStartTime,omitempty"`
+	ProcessingStartTime *time.Time `json:"processingStartTime,omitempty"`
 	// The date and time when the report processing completed, in ISO 8601 date time format.
-	ProcessingEndTime *apis.JsonTimeISO8601 `json:"processingEndTime,omitempty"`
+	ProcessingEndTime *time.Time `json:"processingEndTime,omitempty"`
 	// The identifier for the report document. Pass this into the getReportDocument operation to get the information you will need to retrieve the report document's contents.
 	ReportDocumentId *string `json:"reportDocumentId,omitempty"`
 }
