@@ -19,6 +19,10 @@ type TokenUpdaterConfig struct {
 	QuitSignal   chan bool
 }
 
+type TokenUpdaterInterface interface {
+	GetAccessToken() string
+}
+
 type TokenUpdater struct {
 	accessToken     *atomic.Value
 	ExpireTimestamp *atomic.Int64

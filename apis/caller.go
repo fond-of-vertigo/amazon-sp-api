@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
 	"io"
 	"net/http"
 	"net/url"
@@ -19,6 +18,8 @@ type APICall struct {
 	APIPath     string
 	QueryParams url.Values
 	Body        []byte
+	// RestrictedDataToken is optional and can be passed to replace the existing accessToken
+	RestrictedDataToken string
 }
 
 func CallAPIWithResponseType[responseType any](callParams APICall, httpClient HttpRequestDoer) (*responseType, error) {
@@ -41,6 +42,10 @@ func CallAPI(callParams APICall, httpClient HttpRequestDoer) (*http.Response, []
 	req, err := createNewRequest(callParams)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if callParams.RestrictedDataToken != "" {
+		req.Header.Add("X-Amz-Access-Token", callParams.RestrictedDataToken)
 	}
 
 	return executeRequest(err, httpClient, req)
