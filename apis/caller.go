@@ -14,13 +14,6 @@ type HttpRequestDoer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-type APICaller struct {
-}
-
-func (c *APICaller) Do(*http.Request) (*http.Response, error) {
-	return nil, nil
-}
-
 type APICall struct {
 	Method      string
 	APIPath     string
