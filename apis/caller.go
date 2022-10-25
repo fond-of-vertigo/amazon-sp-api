@@ -10,7 +10,7 @@ import (
 	"net/url"
 )
 
-type Doer interface {
+type HttpRequestDoer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
@@ -28,7 +28,7 @@ type APICall struct {
 	Body        []byte
 }
 
-func CallAPIWithResponseType[responseType any](callParams APICall, httpClient Doer) (*responseType, error) {
+func CallAPIWithResponseType[responseType any](callParams APICall, httpClient HttpRequestDoer) (*responseType, error) {
 	_, bodyBytes, err := CallAPI(callParams, httpClient)
 	if err != nil {
 		return nil, err
@@ -39,12 +39,12 @@ func CallAPIWithResponseType[responseType any](callParams APICall, httpClient Do
 	return &reportResp, err
 }
 
-func CallAPIIgnoreResponse(callParams APICall, httpClient Doer) error {
+func CallAPIIgnoreResponse(callParams APICall, httpClient HttpRequestDoer) error {
 	_, _, err := CallAPI(callParams, httpClient)
 	return err
 }
 
-func CallAPI(callParams APICall, httpClient Doer) (*http.Response, []byte, error) {
+func CallAPI(callParams APICall, httpClient HttpRequestDoer) (*http.Response, []byte, error) {
 	req, err := createNewRequest(callParams)
 	if err != nil {
 		return nil, nil, err
@@ -63,7 +63,7 @@ func createNewRequest(callParams APICall) (*http.Request, error) {
 	return http.NewRequest(callParams.Method, apiPath.RawPath, bytes.NewReader(callParams.Body))
 }
 
-func executeRequest(err error, httpClient Doer, req *http.Request) (*http.Response, []byte, error) {
+func executeRequest(err error, httpClient HttpRequestDoer, req *http.Request) (*http.Response, []byte, error) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, nil, err

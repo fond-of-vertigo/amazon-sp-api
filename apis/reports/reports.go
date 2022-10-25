@@ -8,7 +8,7 @@ import (
 )
 
 type Report struct {
-	HttpClient apis.Doer
+	HttpClient apis.HttpRequestDoer
 }
 
 // GetReports returns report details for the reports that match the filters that you specify.
