@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type TokenRefresherConfig struct {
+type TokenUpdaterConfig struct {
 	RefreshToken string
 	ClientID     string
 	ClientSecret string
@@ -19,10 +19,10 @@ type TokenRefresherConfig struct {
 	QuitSignal   chan bool
 }
 
-type TokenRefresher struct {
+type TokenUpdater struct {
 	accessToken     *atomic.Value
 	ExpireTimestamp *atomic.Int64
-	config          TokenRefresherConfig
+	config          TokenUpdaterConfig
 	log             logger.Logger
 	quitSignal      chan bool
 }
@@ -35,23 +35,23 @@ type AccessTokenResponse struct {
 	ErrorDescription string `json:"error_description"`
 }
 
-func NewTokenRefresher(config TokenRefresherConfig) (*TokenRefresher, error) {
-	tokenRefresher := TokenRefresher{
+func NewTokenUpdater(config TokenUpdaterConfig) (*TokenUpdater, error) {
+	t := TokenUpdater{
 		config:     config,
 		log:        config.Logger,
 		quitSignal: config.QuitSignal,
 	}
-	if err := tokenRefresher.fetchNewToken(); err != nil {
+	if err := t.fetchNewToken(); err != nil {
 		return nil, fmt.Errorf("accesstoken could not be fetched: %w", err)
 	}
-	return &tokenRefresher, nil
+	return &t, nil
 }
 
-func (t *TokenRefresher) StartUpdatesInBackground() {
+func (t *TokenUpdater) RunInBackground() {
 	go t.checkAccessToken()
 }
 
-func (t *TokenRefresher) checkAccessToken() {
+func (t *TokenUpdater) checkAccessToken() {
 	for {
 		select {
 		case <-t.quitSignal:
@@ -70,11 +70,11 @@ func (t *TokenRefresher) checkAccessToken() {
 	}
 }
 
-func (t *TokenRefresher) GetAccessToken() string {
+func (t *TokenUpdater) GetAccessToken() string {
 	return fmt.Sprintf("%v", t.accessToken.Load())
 }
 
-func (t *TokenRefresher) fetchNewToken() error {
+func (t *TokenUpdater) fetchNewToken() error {
 	reqBody, _ := json.Marshal(map[string]string{
 		"grant_type":    "refresh_token",
 		"refresh_token": t.config.RefreshToken,

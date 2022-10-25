@@ -20,12 +20,12 @@ type Config struct {
 }
 
 type SellingPartnerClient struct {
-	tokenRefresher *TokenRefresher
-	quitSignal     chan bool
-	Report         reports.Report
+	tokenUpdater *TokenUpdater
+	quitSignal   chan bool
+	Report       reports.Report
 }
 
-// Close stops the TokenRefresher thread
+// Close stops the TokenUpdater thread
 func (s *SellingPartnerClient) Close() {
 	s.quitSignal <- true
 }
@@ -33,7 +33,7 @@ func (s *SellingPartnerClient) Close() {
 func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 	quitSignal := make(chan bool)
 
-	tokenRefresher, err := NewTokenRefresher(TokenRefresherConfig{
+	t, err := NewTokenUpdater(TokenUpdaterConfig{
 		RefreshToken: config.RefreshToken,
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
@@ -43,10 +43,10 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 		return nil, err
 	}
 
-	httpClient := httpClient{HttpClient: &http.Client{}, TokenRefresher: tokenRefresher}
+	httpClient := httpClient{HttpClient: &http.Client{}, TokenUpdater: t}
 	return &SellingPartnerClient{
-		tokenRefresher: tokenRefresher,
-		quitSignal:     quitSignal,
-		Report:         reports.Report{HttpClient: &httpClient},
+		tokenUpdater: t,
+		quitSignal:   quitSignal,
+		Report:       reports.Report{HttpClient: &httpClient},
 	}, nil
 }
