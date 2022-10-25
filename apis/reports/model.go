@@ -34,13 +34,32 @@ type ReportModel struct {
 }
 
 type GetReportFilter struct {
-	reportTypes        []string
+	// reportTypes is a list of report types used to filter reports.
+	// When reportTypes is provided, the other filter parameters
+	// (processingStatuses, marketplaceIds, createdSince, createdUntil) and pageSize may also be provided.
+	// Either reportTypes or nextToken is required.
+	// Min count 1, max count 10
+	reportTypes []string
+	// processingStatuses is a list of processing statuses used to filter reports.
 	processingStatuses []string
-	marketplaceIds     []string
-	pageSize           int
-	createdSince       apis.JsonTimeISO8601
-	createdUntil       apis.JsonTimeISO8601
-	nextToken          string
+	//marketplaceIds is a list of marketplace identifiers used to filter reports.
+	// The reports returned will match at least one of the marketplaces that you specify.
+	// min count 1, max count 10
+	marketplaceIds []string
+	// pageSize is the maximum number of reports to return in a single call.
+	// min 1, max 100
+	pageSize int
+	// createdSince is the earliest report creation date and time for reports to include in the response, in ISO 8601 date time format.
+	// The default is 90 days ago. Reports are retained for a maximum of 90 days.
+	createdSince apis.JsonTimeISO8601
+	// createdUntil is the latest report creation date and time for reports to include in the response, in ISO 8601 date time format.
+	// The default is now.
+	createdUntil apis.JsonTimeISO8601
+	// nextToken is a string token returned in the response to your previous request.
+	// nextToken is returned when the number of results exceeds the specified pageSize value.
+	//To get the next page of results, call the getReports operation and include this token as the only parameter.
+	// Specifying nextToken with any other parameters will cause the request to fail.
+	nextToken string
 }
 
 func (f *GetReportFilter) GetQuery() url.Values {
