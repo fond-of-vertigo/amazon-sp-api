@@ -1,7 +1,9 @@
 package selling_partner_api
 
 import (
+	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
 	"github.com/fond-of-vertigo/logger"
+	"net/http"
 	"net/url"
 )
 
@@ -20,6 +22,7 @@ type Config struct {
 type SellingPartnerClient struct {
 	tokenRefresher *TokenRefresher
 	quitSignal     chan bool
+	Report         reports.Report
 }
 
 // Close stops the TokenRefresher thread
@@ -40,5 +43,10 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 		return nil, err
 	}
 
-	return &SellingPartnerClient{tokenRefresher: tokenRefresher, quitSignal: quitSignal}, nil
+	httpClient := http.Client{}
+	return &SellingPartnerClient{
+		tokenRefresher: tokenRefresher,
+		quitSignal:     quitSignal,
+		Report:         reports.Report{HttpClient: &httpClient},
+	}, nil
 }
