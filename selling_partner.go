@@ -2,6 +2,7 @@ package selling_partner_api
 
 import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
+	"github.com/fond-of-vertigo/amazon-sp-api/apis/tokens"
 	"github.com/fond-of-vertigo/logger"
 	"net/http"
 )
@@ -21,6 +22,7 @@ type Config struct {
 type SellingPartnerClient struct {
 	quitSignal chan bool
 	Report     reports.Report
+	Token      tokens.Token
 }
 
 // Close stops the TokenUpdater thread
