@@ -123,6 +123,12 @@ type ReportDocument struct {
 	CompressionAlgorithm *string `json:"compressionAlgorithm,omitempty"`
 }
 
+// GetAPIPath returns the APIPath /reports/xxxx-xx-xx/documents/documentID which can be
+// used for RestrictedDataTokens (RDTs) generation
+func (r *ReportDocument) GetAPIPath() string {
+	return pathPrefix + "/documents/" + r.ReportDocumentID
+}
+
 // ReportSchedule Detailed information about a report schedule.
 type ReportSchedule struct {
 	// The identifier for the report schedule. This identifier is unique only in combination with a seller ID.
