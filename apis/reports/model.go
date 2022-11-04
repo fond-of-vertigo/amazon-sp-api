@@ -21,9 +21,9 @@ const (
 // ReportModel Detailed information about the report.
 type ReportModel struct {
 	// A list of marketplace identifiers for the report.
-	MarketplaceIDs []string `json:"marketplaceIDs,omitempty"`
+	MarketplaceIDs []string `json:"marketplaceIds,omitempty"`
 	// The identifier for the report. This identifier is unique only in combination with a seller ID.
-	ReportID string `json:"reportID"`
+	ReportID string `json:"reportId"`
 	// The report type.
 	ReportType string `json:"reportType"`
 	// The start of a date and time range used for selecting the data to report.
@@ -31,7 +31,7 @@ type ReportModel struct {
 	// The end of a date and time range used for selecting the data to report.
 	DataEndTime *time.Time `json:"dataEndTime,omitempty"`
 	// The identifier of the report schedule that created this report (if any). This identifier is unique only in combination with a seller ID.
-	ReportScheduleID *string `json:"reportScheduleID,omitempty"`
+	ReportScheduleID *string `json:"reportScheduleId,omitempty"`
 	// The date and time when the report was created.
 	CreatedTime time.Time `json:"createdTime"`
 	// The processing status of the report.
@@ -41,7 +41,7 @@ type ReportModel struct {
 	// The date and time when the report processing completed, in ISO 8601 date time format.
 	ProcessingEndTime *time.Time `json:"processingEndTime,omitempty"`
 	// The identifier for the report document. Pass this into the getReportDocument operation to get the information you will need to retrieve the report document's contents.
-	ReportDocumentID *string `json:"reportDocumentID,omitempty"`
+	ReportDocumentID *string `json:"reportDocumentId,omitempty"`
 }
 
 type GetReportFilter struct {
@@ -77,7 +77,7 @@ func (f *GetReportFilter) GetQuery() url.Values {
 	q := url.Values{}
 	q.Add("reportTypes", strings.Join(f.reportTypes, ","))
 	q.Add("processingStatuses", strings.Join(f.processingStatuses, ","))
-	q.Add("marketplaceIDs", strings.Join(f.marketplaceIDs, ","))
+	q.Add("marketplaceIds", strings.Join(f.marketplaceIDs, ","))
 	q.Add("pageSize", fmt.Sprint(f.pageSize))
 	q.Add("createdSince", f.createdSince.String())
 	q.Add("createdUntil", f.createdUntil.String())
@@ -96,13 +96,13 @@ type CreateReportSpecification struct {
 	// The end of a date and time range, in ISO 8601 date time format, used for selecting the data to report. The default is now. The value must be prior to or equal to the current date and time. Not all report types make use of this.
 	DataEndTime *apis.JsonTimeISO8601 `json:"dataEndTime,omitempty"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
-	MarketplaceIDs []string `json:"marketplaceIDs"`
+	MarketplaceIDs []string `json:"marketplaceIds"`
 }
 
 // CreateReportResponse Response schema.
 type CreateReportResponse struct {
 	// The identifier for the report. This identifier is unique only in combination with a seller ID.
-	ReportID string `json:"reportID"`
+	ReportID string `json:"reportId"`
 }
 
 // GetReportsResponse The response for the getReports operation.
@@ -116,7 +116,7 @@ type GetReportsResponse struct {
 // ReportDocument Information required for the report document.
 type ReportDocument struct {
 	// The identifier for the report document. This identifier is unique only in combination with a seller ID.
-	ReportDocumentID string `json:"reportDocumentID"`
+	ReportDocumentID string `json:"reportDocumentId"`
 	// A presigned URL for the report document. This URL expires after 5 minutes.
 	Url string `json:"url"`
 	// If present, the report document contents have been compressed with the provided algorithm.
@@ -132,11 +132,11 @@ func (r *ReportDocument) GetAPIPath() string {
 // ReportSchedule Detailed information about a report schedule.
 type ReportSchedule struct {
 	// The identifier for the report schedule. This identifier is unique only in combination with a seller ID.
-	ReportScheduleID string `json:"reportScheduleID"`
+	ReportScheduleID string `json:"reportScheduleId"`
 	// The report type.
 	ReportType string `json:"reportType"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
-	MarketplaceIDs []string `json:"marketplaceIDs,omitempty"`
+	MarketplaceIDs []string `json:"marketplaceIds,omitempty"`
 	// Additional information passed to reports. This varies by report type.
 	ReportOptions *map[string]string `json:"reportOptions,omitempty"`
 	// An ISO 8601 period value that indicates how often a report should be created.
@@ -153,7 +153,7 @@ type ReportScheduleList struct {
 // CreateReportScheduleResponse Response schema.
 type CreateReportScheduleResponse struct {
 	// The identifier for the report schedule. This identifier is unique only in combination with a seller ID.
-	ReportScheduleID string `json:"reportScheduleID"`
+	ReportScheduleID string `json:"reportScheduleId"`
 }
 
 // CreateReportScheduleSpecification struct for CreateReportScheduleSpecification
@@ -161,7 +161,7 @@ type CreateReportScheduleSpecification struct {
 	// The report type.
 	ReportType string `json:"reportType"`
 	// A list of marketplace identifiers for the report schedule.
-	MarketplaceIDs []string `json:"marketplaceIDs"`
+	MarketplaceIDs []string `json:"marketplaceIds"`
 	// Additional information passed to reports. This varies by report type.
 	ReportOptions *map[string]string `json:"reportOptions,omitempty"`
 	// One of a set of predefined ISO 8601 periods that specifies how often a report should be created.
