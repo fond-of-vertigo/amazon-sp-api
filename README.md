@@ -9,10 +9,9 @@ package main
 
 import (
 	"github.com/fond-of-vertigo/amazon-sp-api"
-    "github.com/fond-of-vertigo/amazon-sp-api/apis"
-    "github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
-    "github.com/fond-of-vertigo/logger"
-"
+	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
+	"github.com/fond-of-vertigo/logger"
 )
 func main() {
 	c := Config{
