@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+const (
+	ProcessingStatusDone       = "DONE"
+	ProcessingStatusCancelled  = "CANCELLED"
+	ProcessingStatusFatal      = "FATAL"
+	ProcessingStatusInProgress = "IN_PROGRESS"
+	ProcessingStatusInQueue    = "IN_QUEUE"
+)
+
 // ReportModel Detailed information about the report.
 type ReportModel struct {
 	// A list of marketplace identifiers for the report.
