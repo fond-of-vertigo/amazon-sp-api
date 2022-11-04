@@ -9,6 +9,7 @@ import (
 )
 
 type ProcessingStatus string
+type MarketplaceID string
 
 const (
 	ProcessingStatusDone       ProcessingStatus = "DONE"
@@ -16,12 +17,34 @@ const (
 	ProcessingStatusFatal      ProcessingStatus = "FATAL"
 	ProcessingStatusInProgress ProcessingStatus = "IN_PROGRESS"
 	ProcessingStatusInQueue    ProcessingStatus = "IN_QUEUE"
+
+	MarketplaceIDCanada                MarketplaceID = "A2EUQ1WTGCTBG2"
+	MarketplaceIDUnitedStatesOfAmerica MarketplaceID = "ATVPDKIKX0DER"
+	MarketplaceIDMexico                MarketplaceID = "A1AM78C64UM0Y8"
+	MarketplaceIDBrazil                MarketplaceID = "A2Q3Y263D00KWC"
+	MarketplaceIDSpain                 MarketplaceID = "A1RKKUPIHCS9HS"
+	MarketplaceIDUnitedKingdom         MarketplaceID = "A1F83G8C2ARO7P"
+	MarketplaceIDFrance                MarketplaceID = "A13V1IB3VIYZZH"
+	MarketplaceIDBelgium               MarketplaceID = "AMEN7PMS3EDWL"
+	MarketplaceIDNetherlands           MarketplaceID = "A1805IZSGTT6HS"
+	MarketplaceIDGermany               MarketplaceID = "A1PA6795UKMFR9"
+	MarketplaceIDItaly                 MarketplaceID = "APJ6JRA9NG5V4"
+	MarketplaceIDSweden                MarketplaceID = "A2NODRKZP88ZB9"
+	MarketplaceIDPoland                MarketplaceID = "A1C3SOZRARQ6R3"
+	MarketplaceIDEgypt                 MarketplaceID = "ARBP9OOSHTCHU"
+	MarketplaceIDTurkey                MarketplaceID = "A33AVAJ2PDY3EV"
+	MarketplaceIDSaudiArabia           MarketplaceID = "A17E79C6D8DWNP"
+	MarketplaceIDUnitedArabEmirates    MarketplaceID = "A2VIGQ35RCS4UG"
+	MarketplaceIDIndia                 MarketplaceID = "A21TJRUUN4KGV"
+	MarketplaceIDSingapore             MarketplaceID = "A19VAU5U5O7RUS"
+	MarketplaceIDAustralia             MarketplaceID = "A39IBJ37TRP1C6"
+	MarketplaceIDJapan                 MarketplaceID = "A1VC38T7YXB528"
 )
 
 // ReportModel Detailed information about the report.
 type ReportModel struct {
 	// A list of marketplace identifiers for the report.
-	MarketplaceIDs []string `json:"marketplaceIds,omitempty"`
+	MarketplaceIDs []MarketplaceID `json:"marketplaceIds,omitempty"`
 	// The identifier for the report. This identifier is unique only in combination with a seller ID.
 	ReportID string `json:"reportId"`
 	// The report type.
@@ -96,7 +119,7 @@ type CreateReportSpecification struct {
 	// The end of a date and time range, in ISO 8601 date time format, used for selecting the data to report. The default is now. The value must be prior to or equal to the current date and time. Not all report types make use of this.
 	DataEndTime *apis.JsonTimeISO8601 `json:"dataEndTime,omitempty"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
-	MarketplaceIDs []string `json:"marketplaceIds"`
+	MarketplaceIDs []MarketplaceID `json:"marketplaceIds"`
 }
 
 // CreateReportResponse Response schema.
@@ -136,7 +159,7 @@ type ReportSchedule struct {
 	// The report type.
 	ReportType string `json:"reportType"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
-	MarketplaceIDs []string `json:"marketplaceIds,omitempty"`
+	MarketplaceIDs []MarketplaceID `json:"marketplaceIds,omitempty"`
 	// Additional information passed to reports. This varies by report type.
 	ReportOptions *map[string]string `json:"reportOptions,omitempty"`
 	// An ISO 8601 period value that indicates how often a report should be created.
@@ -161,7 +184,7 @@ type CreateReportScheduleSpecification struct {
 	// The report type.
 	ReportType string `json:"reportType"`
 	// A list of marketplace identifiers for the report schedule.
-	MarketplaceIDs []string `json:"marketplaceIds"`
+	MarketplaceIDs []MarketplaceID `json:"marketplaceIds"`
 	// Additional information passed to reports. This varies by report type.
 	ReportOptions *map[string]string `json:"reportOptions,omitempty"`
 	// One of a set of predefined ISO 8601 periods that specifies how often a report should be created.
