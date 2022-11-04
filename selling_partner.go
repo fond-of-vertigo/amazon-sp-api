@@ -13,9 +13,9 @@ type Config struct {
 	RefreshToken       string
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
-	Region             string
+	Region             Region
 	RoleArn            string
-	Endpoint           string
+	Endpoint           Endpoint
 	Log                logger.Logger
 }
 

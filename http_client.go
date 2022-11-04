@@ -14,14 +14,27 @@ import (
 	"time"
 )
 
+type Region string
+type Endpoint string
+
+const (
+	AWSRegionUSEast Region = "us-east-1"
+	AWSRegionEUWest Region = "eu-west-1"
+	AWSRegionUSWest Region = "us-west-2"
+
+	EndpointNorthAmerica Endpoint = "https://sellingpartnerapi-na.amazon.com"
+	EndpointEurope       Endpoint = "https://sellingpartnerapi-eu.amazon.com"
+	EndpointFarEast      Endpoint = "https://sellingpartnerapi-fe.amazon.com"
+)
+
 type HttpClientConfig struct {
 	client             *http.Client
 	TokenUpdater       TokenUpdaterInterface
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
-	Region             string
+	Region             Region
 	RoleArn            string
-	Endpoint           string
+	Endpoint           Endpoint
 }
 
 func NewHttpClient(config HttpClientConfig) (client *HttpClient, err error) {
@@ -40,9 +53,9 @@ func NewHttpClient(config HttpClientConfig) (client *HttpClient, err error) {
 
 type HttpClient struct {
 	client            *http.Client
-	endpoint          string
+	endpoint          Endpoint
 	tokenUpdater      TokenUpdaterInterface
-	region            string
+	region            Region
 	roleArn           string
 	aws4Signer        *v4.Signer
 	awsStsCredentials *sts.Credentials
@@ -60,7 +73,7 @@ func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func (h *HttpClient) GetEndpoint() string {
-	return h.endpoint
+	return string(h.endpoint)
 }
 
 func (h *HttpClient) addAccessTokenToHeader(req *http.Request) {
@@ -91,7 +104,7 @@ func (h *HttpClient) signRequest(r *http.Request) error {
 		body = bytes.NewReader(payload)
 	}
 
-	_, err := h.aws4Signer.Sign(r, body, "execute-api", h.region, time.Now().UTC())
+	_, err := h.aws4Signer.Sign(r, body, "execute-api", string(h.region), time.Now().UTC())
 
 	return err
 }
