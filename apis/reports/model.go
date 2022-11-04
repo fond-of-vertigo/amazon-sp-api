@@ -34,6 +34,16 @@ type ReportModel struct {
 	ReportDocumentID *string `json:"reportDocumentId,omitempty"`
 }
 
+// GetAPIPath returns the APIPath /reports/xxxx-xx-xx/documents/documentID which can be
+// used for RestrictedDataTokens (RDTs) generation
+func (r *ReportModel) GetAPIPath() string {
+	if r.ReportDocumentID == nil {
+		return ""
+	}
+
+	return pathPrefix + "/documents/" + *r.ReportDocumentID
+}
+
 type GetReportFilter struct {
 	// reportTypes is a list of report types used to filter reports.
 	// When reportTypes is provided, the other filter parameters
@@ -111,12 +121,6 @@ type ReportDocument struct {
 	Url string `json:"url"`
 	// If present, the report document contents have been compressed with the provided algorithm.
 	CompressionAlgorithm *string `json:"compressionAlgorithm,omitempty"`
-}
-
-// GetAPIPath returns the APIPath /reports/xxxx-xx-xx/documents/documentID which can be
-// used for RestrictedDataTokens (RDTs) generation
-func (r *ReportDocument) GetAPIPath() string {
-	return pathPrefix + "/documents/" + r.ReportDocumentID
 }
 
 // ReportSchedule Detailed information about a report schedule.
