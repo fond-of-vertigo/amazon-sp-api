@@ -51,7 +51,7 @@ func CallAPI(callParams APICall, httpClient HttpRequestDoer) (*http.Response, []
 		req.Header.Add("X-Amz-Access-Token", *callParams.RestrictedDataToken)
 	}
 
-	return executeRequest(err, httpClient, req)
+	return executeRequest(httpClient, req)
 }
 
 func createNewRequest(callParams APICall) (*http.Request, error) {
@@ -64,7 +64,7 @@ func createNewRequest(callParams APICall) (*http.Request, error) {
 	return http.NewRequest(callParams.Method, apiPath.String(), bytes.NewBuffer(callParams.Body))
 }
 
-func executeRequest(err error, httpClient HttpRequestDoer, req *http.Request) (*http.Response, []byte, error) {
+func executeRequest(httpClient HttpRequestDoer, req *http.Request) (*http.Response, []byte, error) {
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, nil, err
