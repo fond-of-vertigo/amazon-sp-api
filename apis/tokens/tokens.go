@@ -3,6 +3,7 @@ package tokens
 import (
 	"encoding/json"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"net/http"
 )
 
 type Token struct {
@@ -12,7 +13,7 @@ type Token struct {
 // CreateRestrictedDataTokenRequest returns a Restricted Data Token (RDT) for one or more restricted resources that you specify.
 func (t *Token) CreateRestrictedDataTokenRequest(restrictedResources []RestrictedResource) (resp *CreateRestrictedDataTokenResponse, err error) {
 	params := apis.APICall{}
-	params.Method = "POST"
+	params.Method = http.MethodPost
 	params.APIPath = config.pathPrefix() + "/restrictedDataToken"
 	params.Body, err = json.Marshal(restrictedResources)
 	if err != nil {

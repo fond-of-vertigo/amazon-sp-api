@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"net/http"
 	"strings"
 )
 
@@ -19,7 +20,7 @@ func (r *Report) GetReports(filter GetReportFilter) (response *GetReportsRespons
 		filter.pageSize = 10
 	}
 	params := apis.APICall{}
-	params.Method = "GET"
+	params.Method = http.MethodGet
 	params.APIPath = config.pathPrefix() + "/reports"
 	params.QueryParams = filter.GetQuery()
 	return apis.CallAPIWithResponseType[GetReportsResponse](params, r.HttpClient)
@@ -28,7 +29,7 @@ func (r *Report) GetReports(filter GetReportFilter) (response *GetReportsRespons
 // CreateReport creates a report and returns the reportID.
 func (r *Report) CreateReport(specification CreateReportSpecification) (resp *CreateReportResponse, err error) {
 	params := apis.APICall{}
-	params.Method = "POST"
+	params.Method = http.MethodPost
 	params.APIPath = config.pathPrefix() + "/reports"
 	params.Body, err = json.Marshal(specification)
 	if err != nil {
@@ -40,7 +41,7 @@ func (r *Report) CreateReport(specification CreateReportSpecification) (resp *Cr
 // GetReport returns report details (including the reportDocumentId, if available) for the report that you specify.
 func (r *Report) GetReport(reportId string) (*ReportModel, error) {
 	params := apis.APICall{}
-	params.Method = "GET"
+	params.Method = http.MethodGet
 	params.APIPath = config.pathPrefix() + "/reports/" + reportId
 	return apis.CallAPIWithResponseType[ReportModel](params, r.HttpClient)
 }
@@ -50,7 +51,7 @@ func (r *Report) GetReport(reportId string) (*ReportModel, error) {
 // reportTypes is list of report types used to filter report schedules. This is optional can can be nil.
 func (r *Report) CancelReport(reportId string) error {
 	params := apis.APICall{}
-	params.Method = "DELETE"
+	params.Method = http.MethodDelete
 	params.APIPath = config.pathPrefix() + "/reports/" + reportId
 	return apis.CallAPIIgnoreResponse(params, r.HttpClient)
 }
@@ -63,7 +64,7 @@ func (r *Report) GetReportSchedules(reportTypes []string) (*GetReportsResponse, 
 		return nil, fmt.Errorf("reportTypes cannot contain more than 10 reportTypes")
 	}
 	params := apis.APICall{}
-	params.Method = "GET"
+	params.Method = http.MethodGet
 	params.APIPath = config.pathPrefix() + "/schedules"
 	params.QueryParams.Add("reportTypes", strings.Join(reportTypes, ","))
 	return apis.CallAPIWithResponseType[GetReportsResponse](params, r.HttpClient)
@@ -74,7 +75,7 @@ func (r *Report) GetReportSchedules(reportTypes []string) (*GetReportsResponse, 
 // it will be cancelled and replaced with this one.
 func (r *Report) CreateReportSchedule(specification CreateReportScheduleSpecification) (resp *CreateReportScheduleResponse, err error) {
 	params := apis.APICall{}
-	params.Method = "POST"
+	params.Method = http.MethodPost
 	params.APIPath = config.pathPrefix() + "/schedules"
 	params.Body, err = json.Marshal(specification)
 	if err != nil {
@@ -86,7 +87,7 @@ func (r *Report) CreateReportSchedule(specification CreateReportScheduleSpecific
 // GetReportSchedule returns report schedule details for the report schedule that you specify.
 func (r *Report) GetReportSchedule(reportScheduleId string) (*ReportSchedule, error) {
 	params := apis.APICall{}
-	params.Method = "GET"
+	params.Method = http.MethodGet
 	params.APIPath = config.pathPrefix() + "/schedules/" + reportScheduleId
 	return apis.CallAPIWithResponseType[ReportSchedule](params, r.HttpClient)
 }
@@ -94,7 +95,7 @@ func (r *Report) GetReportSchedule(reportScheduleId string) (*ReportSchedule, er
 // CancelReportSchedule cancels the report schedule that you specify.
 func (r *Report) CancelReportSchedule(reportScheduleId string) error {
 	params := apis.APICall{}
-	params.Method = "DELETE"
+	params.Method = http.MethodDelete
 	params.APIPath = config.pathPrefix() + "/schedules/" + reportScheduleId
 	return apis.CallAPIIgnoreResponse(params, r.HttpClient)
 }
@@ -103,7 +104,7 @@ func (r *Report) CancelReportSchedule(reportScheduleId string) error {
 // a restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
 func (r *Report) GetReportDocument(reportDocumentId string, restrictedDataToken *string) (*ReportDocument, error) {
 	params := apis.APICall{}
-	params.Method = "GET"
+	params.Method = http.MethodGet
 	params.APIPath = config.pathPrefix() + "/documents/" + reportDocumentId
 	params.RestrictedDataToken = restrictedDataToken
 	return apis.CallAPIWithResponseType[ReportDocument](params, r.HttpClient)
