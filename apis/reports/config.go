@@ -1,15 +1,15 @@
 package reports
 
 type Config struct {
-	RootRoute  string
+	RootPath   string
 	APIVersion string
 }
 
-func (c *Config) routePrefix() string {
-	return c.RootRoute + c.APIVersion
+func (c *Config) pathPrefix() string {
+	return c.RootPath + c.APIVersion
 }
 
 var config = Config{
-	RootRoute:  "/reports/",
+	RootPath:   "/reports/",
 	APIVersion: "2021-06-30",
 }

@@ -55,7 +55,7 @@ func NewTokenUpdater(config TokenUpdaterConfig) *TokenUpdater {
 func (t *TokenUpdater) RunInBackground() error {
 	t.ExpireTimestamp = &atomic.Int64{}
 	t.accessToken = &atomic.Value{}
-	t.log.Debugf("Fetching first Token")
+	t.log.Debugf("Fetching first access-token")
 	if err := t.fetchNewToken(); err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (t *TokenUpdater) checkAccessToken() {
 	for {
 		select {
 		case <-t.quitSignal:
-			t.log.Infof("Received signal to stop token updates.")
+			t.log.Infof("Received signal to stop access-token updates.")
 			return
 		default:
 			secondsToWait := secondsUntilExpired(t.ExpireTimestamp.Load())

@@ -41,7 +41,7 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 		return nil, err
 	}
 
-	httpConfig := HttpClientConfig{
+	h := HttpClientConfig{
 		client:             &http.Client{},
 		Endpoint:           config.Endpoint,
 		TokenUpdater:       t,
@@ -50,7 +50,7 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 		Region:             config.Region,
 		RoleArn:            config.RoleArn,
 	}
-	httpClient, err := NewHttpClient(httpConfig)
+	httpClient, err := NewHttpClient(h)
 	if err != nil {
 		return nil, err
 	}

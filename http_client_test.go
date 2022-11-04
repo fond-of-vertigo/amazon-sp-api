@@ -26,7 +26,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 	tests := []struct {
 		name            string
 		fields          fields
-		req             *http.Request
+		request         *http.Request
 		wantAccessToken string
 	}{
 		{
@@ -35,7 +35,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 				HttpClient:   nil,
 				TokenUpdater: &mockTokenUpdater{ReturnAccessToken: "ACCESS-TOKEN-XY"},
 			},
-			req:             reqWithRDT,
+			request:         reqWithRDT,
 			wantAccessToken: "EXISTING-RDT",
 		},
 		{
@@ -44,7 +44,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 				HttpClient:   nil,
 				TokenUpdater: &mockTokenUpdater{ReturnAccessToken: "ACCESS-TOKEN-XY"},
 			},
-			req:             reqWithoutRDT,
+			request:         reqWithoutRDT,
 			wantAccessToken: "ACCESS-TOKEN-XY",
 		},
 	}
@@ -54,9 +54,9 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 				client:       tt.fields.HttpClient,
 				tokenUpdater: tt.fields.TokenUpdater,
 			}
-			h.addAccessToken(tt.req)
-			if tt.req.Header.Get("X-Amz-Access-Token") != tt.wantAccessToken {
-				t.Fatalf("Token %s != %s", tt.req.Header.Get("X-Amz-Access-Token"), tt.wantAccessToken)
+			h.addAccessTokenToHeader(tt.request)
+			if tt.request.Header.Get("X-Amz-Access-Token") != tt.wantAccessToken {
+				t.Fatalf("Token %s != %s", tt.request.Header.Get("X-Amz-Access-Token"), tt.wantAccessToken)
 			}
 		})
 	}

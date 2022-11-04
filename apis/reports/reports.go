@@ -20,7 +20,7 @@ func (r *Report) GetReports(filter GetReportFilter) (response *GetReportsRespons
 	}
 	params := apis.APICall{}
 	params.Method = "GET"
-	params.APIPath = config.routePrefix() + "/reports"
+	params.APIPath = config.pathPrefix() + "/reports"
 	params.QueryParams = filter.GetQuery()
 	return apis.CallAPIWithResponseType[GetReportsResponse](params, r.HttpClient)
 }
@@ -29,7 +29,7 @@ func (r *Report) GetReports(filter GetReportFilter) (response *GetReportsRespons
 func (r *Report) CreateReport(specification CreateReportSpecification) (resp *CreateReportResponse, err error) {
 	params := apis.APICall{}
 	params.Method = "POST"
-	params.APIPath = config.routePrefix() + "/reports"
+	params.APIPath = config.pathPrefix() + "/reports"
 	params.Body, err = json.Marshal(specification)
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (r *Report) CreateReport(specification CreateReportSpecification) (resp *Cr
 func (r *Report) GetReport(reportId string) (*ReportModel, error) {
 	params := apis.APICall{}
 	params.Method = "GET"
-	params.APIPath = config.routePrefix() + "/reports/" + reportId
+	params.APIPath = config.pathPrefix() + "/reports/" + reportId
 	return apis.CallAPIWithResponseType[ReportModel](params, r.HttpClient)
 }
 
@@ -51,7 +51,7 @@ func (r *Report) GetReport(reportId string) (*ReportModel, error) {
 func (r *Report) CancelReport(reportId string) error {
 	params := apis.APICall{}
 	params.Method = "DELETE"
-	params.APIPath = config.routePrefix() + "/reports/" + reportId
+	params.APIPath = config.pathPrefix() + "/reports/" + reportId
 	return apis.CallAPIIgnoreResponse(params, r.HttpClient)
 }
 
@@ -64,7 +64,7 @@ func (r *Report) GetReportSchedules(reportTypes []string) (*GetReportsResponse, 
 	}
 	params := apis.APICall{}
 	params.Method = "GET"
-	params.APIPath = config.routePrefix() + "/schedules"
+	params.APIPath = config.pathPrefix() + "/schedules"
 	params.QueryParams.Add("reportTypes", strings.Join(reportTypes, ","))
 	return apis.CallAPIWithResponseType[GetReportsResponse](params, r.HttpClient)
 }
@@ -75,7 +75,7 @@ func (r *Report) GetReportSchedules(reportTypes []string) (*GetReportsResponse, 
 func (r *Report) CreateReportSchedule(specification CreateReportScheduleSpecification) (resp *CreateReportScheduleResponse, err error) {
 	params := apis.APICall{}
 	params.Method = "POST"
-	params.APIPath = config.routePrefix() + "/schedules"
+	params.APIPath = config.pathPrefix() + "/schedules"
 	params.Body, err = json.Marshal(specification)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (r *Report) CreateReportSchedule(specification CreateReportScheduleSpecific
 func (r *Report) GetReportSchedule(reportScheduleId string) (*ReportSchedule, error) {
 	params := apis.APICall{}
 	params.Method = "GET"
-	params.APIPath = config.routePrefix() + "/schedules/" + reportScheduleId
+	params.APIPath = config.pathPrefix() + "/schedules/" + reportScheduleId
 	return apis.CallAPIWithResponseType[ReportSchedule](params, r.HttpClient)
 }
 
@@ -95,7 +95,7 @@ func (r *Report) GetReportSchedule(reportScheduleId string) (*ReportSchedule, er
 func (r *Report) CancelReportSchedule(reportScheduleId string) error {
 	params := apis.APICall{}
 	params.Method = "DELETE"
-	params.APIPath = config.routePrefix() + "/schedules/" + reportScheduleId
+	params.APIPath = config.pathPrefix() + "/schedules/" + reportScheduleId
 	return apis.CallAPIIgnoreResponse(params, r.HttpClient)
 }
 
@@ -104,7 +104,7 @@ func (r *Report) CancelReportSchedule(reportScheduleId string) error {
 func (r *Report) GetReportDocument(reportDocumentId string, restrictedDataToken *string) (*ReportDocument, error) {
 	params := apis.APICall{}
 	params.Method = "GET"
-	params.APIPath = config.routePrefix() + "/documents/" + reportDocumentId
+	params.APIPath = config.pathPrefix() + "/documents/" + reportDocumentId
 	params.RestrictedDataToken = restrictedDataToken
 	return apis.CallAPIWithResponseType[ReportDocument](params, r.HttpClient)
 }

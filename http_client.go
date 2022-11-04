@@ -50,7 +50,7 @@ type HttpClient struct {
 }
 
 func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
-	h.addAccessToken(req)
+	h.addAccessTokenToHeader(req)
 
 	if err := h.signRequest(req); err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (h *HttpClient) GetEndpoint() string {
 	return h.endpoint
 }
 
-func (h *HttpClient) addAccessToken(req *http.Request) {
+func (h *HttpClient) addAccessTokenToHeader(req *http.Request) {
 	if req.Header.Get("X-Amz-Access-Token") == "" {
 		req.Header.Add("X-Amz-Access-Token", h.tokenUpdater.GetAccessToken())
 	}
