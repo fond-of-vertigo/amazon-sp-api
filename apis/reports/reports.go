@@ -40,21 +40,21 @@ func (r *Report) CreateReport(specification CreateReportSpecification) (resp *Cr
 	return apis.CallAPIWithResponseType[CreateReportResponse](params, r.HttpClient)
 }
 
-// GetReport returns report details (including the reportDocumentId, if available) for the report that you specify.
-func (r *Report) GetReport(reportId string) (*ReportModel, error) {
+// GetReport returns report details (including the reportDocumentID, if available) for the report that you specify.
+func (r *Report) GetReport(reportID string) (*ReportModel, error) {
 	params := apis.APICall{}
 	params.Method = http.MethodGet
-	params.APIPath = pathPrefix + "/reports/" + reportId
+	params.APIPath = pathPrefix + "/reports/" + reportID
 	return apis.CallAPIWithResponseType[ReportModel](params, r.HttpClient)
 }
 
 // CancelReport returns report schedule details that match the filters that you specify.
 //
 // reportTypes is list of report types used to filter report schedules. This is optional can can be nil.
-func (r *Report) CancelReport(reportId string) error {
+func (r *Report) CancelReport(reportID string) error {
 	params := apis.APICall{}
 	params.Method = http.MethodDelete
-	params.APIPath = pathPrefix + "/reports/" + reportId
+	params.APIPath = pathPrefix + "/reports/" + reportID
 	return apis.CallAPIIgnoreResponse(params, r.HttpClient)
 }
 
@@ -87,27 +87,27 @@ func (r *Report) CreateReportSchedule(specification CreateReportScheduleSpecific
 }
 
 // GetReportSchedule returns report schedule details for the report schedule that you specify.
-func (r *Report) GetReportSchedule(reportScheduleId string) (*ReportSchedule, error) {
+func (r *Report) GetReportSchedule(reportScheduleID string) (*ReportSchedule, error) {
 	params := apis.APICall{}
 	params.Method = http.MethodGet
-	params.APIPath = pathPrefix + "/schedules/" + reportScheduleId
+	params.APIPath = pathPrefix + "/schedules/" + reportScheduleID
 	return apis.CallAPIWithResponseType[ReportSchedule](params, r.HttpClient)
 }
 
 // CancelReportSchedule cancels the report schedule that you specify.
-func (r *Report) CancelReportSchedule(reportScheduleId string) error {
+func (r *Report) CancelReportSchedule(reportScheduleID string) error {
 	params := apis.APICall{}
 	params.Method = http.MethodDelete
-	params.APIPath = pathPrefix + "/schedules/" + reportScheduleId
+	params.APIPath = pathPrefix + "/schedules/" + reportScheduleID
 	return apis.CallAPIIgnoreResponse(params, r.HttpClient)
 }
 
 // GetReportDocument returns the information required for retrieving a report document's contents.
-// a restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
-func (r *Report) GetReportDocument(reportDocumentId string, restrictedDataToken *string) (*ReportDocument, error) {
+// a restrictedDataToken is optional and may be passed to receive Personally IDentifiable Information (PII).
+func (r *Report) GetReportDocument(reportDocumentID string, restrictedDataToken *string) (*ReportDocument, error) {
 	params := apis.APICall{}
 	params.Method = http.MethodGet
-	params.APIPath = pathPrefix + "/documents/" + reportDocumentId
+	params.APIPath = pathPrefix + "/documents/" + reportDocumentID
 	params.RestrictedDataToken = restrictedDataToken
 	return apis.CallAPIWithResponseType[ReportDocument](params, r.HttpClient)
 }

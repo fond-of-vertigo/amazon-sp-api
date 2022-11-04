@@ -37,7 +37,7 @@ func main() {
 		ReportType:     "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_INVOICING",
 		DataStartTime:  (*apis.JsonTimeISO8601)(&from),
 		DataEndTime:    (*apis.JsonTimeISO8601)(&now),
-		MarketplaceIds: []string{"A1PA6795UKMFR9"},
+		MarketplaceIDs: []string{"A1PA6795UKMFR9"},
 	}
 
 	resp, err := sp.Report.CreateReport(spec)
@@ -45,7 +45,7 @@ func main() {
 		panic(err)
 	}
 
-	println(resp.ReportId)
+	println(resp.ReportID)
 	
 }
 ```
