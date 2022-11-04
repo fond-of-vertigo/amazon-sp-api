@@ -34,9 +34,9 @@ type ReportModel struct {
 	ReportDocumentID *string `json:"reportDocumentId,omitempty"`
 }
 
-// GetAPIPath returns the APIPath /reports/xxxx-xx-xx/documents/documentID which can be
+// GetDocumentAPIPath returns the APIPath /reports/xxxx-xx-xx/documents/documentID which can be
 // used for RestrictedDataTokens (RDTs) generation
-func (r *ReportModel) GetAPIPath() string {
+func (r *ReportModel) GetDocumentAPIPath() string {
 	if r.ReportDocumentID == nil {
 		return ""
 	}
