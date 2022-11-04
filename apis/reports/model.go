@@ -8,12 +8,14 @@ import (
 	"time"
 )
 
+type ProcessingStatus string
+
 const (
-	ProcessingStatusDone       = "DONE"
-	ProcessingStatusCancelled  = "CANCELLED"
-	ProcessingStatusFatal      = "FATAL"
-	ProcessingStatusInProgress = "IN_PROGRESS"
-	ProcessingStatusInQueue    = "IN_QUEUE"
+	ProcessingStatusDone       ProcessingStatus = "DONE"
+	ProcessingStatusCancelled  ProcessingStatus = "CANCELLED"
+	ProcessingStatusFatal      ProcessingStatus = "FATAL"
+	ProcessingStatusInProgress ProcessingStatus = "IN_PROGRESS"
+	ProcessingStatusInQueue    ProcessingStatus = "IN_QUEUE"
 )
 
 // ReportModel Detailed information about the report.
@@ -33,7 +35,7 @@ type ReportModel struct {
 	// The date and time when the report was created.
 	CreatedTime time.Time `json:"createdTime"`
 	// The processing status of the report.
-	ProcessingStatus string `json:"processingStatus"`
+	ProcessingStatus ProcessingStatus `json:"processingStatus"`
 	// The date and time when the report processing started, in ISO 8601 date time format.
 	ProcessingStartTime *time.Time `json:"processingStartTime,omitempty"`
 	// The date and time when the report processing completed, in ISO 8601 date time format.
