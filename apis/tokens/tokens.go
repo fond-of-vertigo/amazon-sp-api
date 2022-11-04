@@ -13,7 +13,7 @@ type Token struct {
 }
 
 // CreateRestrictedDataTokenRequest returns a Restricted Data Token (RDT) for one or more restricted resources that you specify.
-func (t *Token) CreateRestrictedDataTokenRequest(restrictedResources []RestrictedResource) (resp *CreateRestrictedDataTokenResponse, err error) {
+func (t *Token) CreateRestrictedDataTokenRequest(restrictedResources CreateRestrictedDataTokenRequest) (resp *CreateRestrictedDataTokenResponse, err error) {
 	params := apis.APICall{}
 	params.Method = http.MethodPost
 	params.APIPath = pathPrefix + "/restrictedDataToken"
