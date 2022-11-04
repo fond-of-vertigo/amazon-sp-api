@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const pathPrefix = "/reports/2021-06-30"
+
 type Report struct {
 	HttpClient apis.HttpRequestDoer
 }
@@ -21,7 +23,7 @@ func (r *Report) GetReports(filter GetReportFilter) (response *GetReportsRespons
 	}
 	params := apis.APICall{}
 	params.Method = http.MethodGet
-	params.APIPath = config.pathPrefix() + "/reports"
+	params.APIPath = pathPrefix + "/reports"
 	params.QueryParams = filter.GetQuery()
 	return apis.CallAPIWithResponseType[GetReportsResponse](params, r.HttpClient)
 }
@@ -30,7 +32,7 @@ func (r *Report) GetReports(filter GetReportFilter) (response *GetReportsRespons
 func (r *Report) CreateReport(specification CreateReportSpecification) (resp *CreateReportResponse, err error) {
 	params := apis.APICall{}
 	params.Method = http.MethodPost
-	params.APIPath = config.pathPrefix() + "/reports"
+	params.APIPath = pathPrefix + "/reports"
 	params.Body, err = json.Marshal(specification)
 	if err != nil {
 		return nil, err
@@ -42,7 +44,7 @@ func (r *Report) CreateReport(specification CreateReportSpecification) (resp *Cr
 func (r *Report) GetReport(reportId string) (*ReportModel, error) {
 	params := apis.APICall{}
 	params.Method = http.MethodGet
-	params.APIPath = config.pathPrefix() + "/reports/" + reportId
+	params.APIPath = pathPrefix + "/reports/" + reportId
 	return apis.CallAPIWithResponseType[ReportModel](params, r.HttpClient)
 }
 
@@ -52,7 +54,7 @@ func (r *Report) GetReport(reportId string) (*ReportModel, error) {
 func (r *Report) CancelReport(reportId string) error {
 	params := apis.APICall{}
 	params.Method = http.MethodDelete
-	params.APIPath = config.pathPrefix() + "/reports/" + reportId
+	params.APIPath = pathPrefix + "/reports/" + reportId
 	return apis.CallAPIIgnoreResponse(params, r.HttpClient)
 }
 
@@ -65,7 +67,7 @@ func (r *Report) GetReportSchedules(reportTypes []string) (*GetReportsResponse, 
 	}
 	params := apis.APICall{}
 	params.Method = http.MethodGet
-	params.APIPath = config.pathPrefix() + "/schedules"
+	params.APIPath = pathPrefix + "/schedules"
 	params.QueryParams.Add("reportTypes", strings.Join(reportTypes, ","))
 	return apis.CallAPIWithResponseType[GetReportsResponse](params, r.HttpClient)
 }
@@ -76,7 +78,7 @@ func (r *Report) GetReportSchedules(reportTypes []string) (*GetReportsResponse, 
 func (r *Report) CreateReportSchedule(specification CreateReportScheduleSpecification) (resp *CreateReportScheduleResponse, err error) {
 	params := apis.APICall{}
 	params.Method = http.MethodPost
-	params.APIPath = config.pathPrefix() + "/schedules"
+	params.APIPath = pathPrefix + "/schedules"
 	params.Body, err = json.Marshal(specification)
 	if err != nil {
 		return nil, err
@@ -88,7 +90,7 @@ func (r *Report) CreateReportSchedule(specification CreateReportScheduleSpecific
 func (r *Report) GetReportSchedule(reportScheduleId string) (*ReportSchedule, error) {
 	params := apis.APICall{}
 	params.Method = http.MethodGet
-	params.APIPath = config.pathPrefix() + "/schedules/" + reportScheduleId
+	params.APIPath = pathPrefix + "/schedules/" + reportScheduleId
 	return apis.CallAPIWithResponseType[ReportSchedule](params, r.HttpClient)
 }
 
@@ -96,7 +98,7 @@ func (r *Report) GetReportSchedule(reportScheduleId string) (*ReportSchedule, er
 func (r *Report) CancelReportSchedule(reportScheduleId string) error {
 	params := apis.APICall{}
 	params.Method = http.MethodDelete
-	params.APIPath = config.pathPrefix() + "/schedules/" + reportScheduleId
+	params.APIPath = pathPrefix + "/schedules/" + reportScheduleId
 	return apis.CallAPIIgnoreResponse(params, r.HttpClient)
 }
 
@@ -105,7 +107,7 @@ func (r *Report) CancelReportSchedule(reportScheduleId string) error {
 func (r *Report) GetReportDocument(reportDocumentId string, restrictedDataToken *string) (*ReportDocument, error) {
 	params := apis.APICall{}
 	params.Method = http.MethodGet
-	params.APIPath = config.pathPrefix() + "/documents/" + reportDocumentId
+	params.APIPath = pathPrefix + "/documents/" + reportDocumentId
 	params.RestrictedDataToken = restrictedDataToken
 	return apis.CallAPIWithResponseType[ReportDocument](params, r.HttpClient)
 }

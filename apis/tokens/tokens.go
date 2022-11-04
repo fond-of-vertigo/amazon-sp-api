@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+const pathPrefix = "/tokens/2021-03-01"
+
 type Token struct {
 	HttpClient apis.HttpRequestDoer
 }
@@ -14,7 +16,7 @@ type Token struct {
 func (t *Token) CreateRestrictedDataTokenRequest(restrictedResources []RestrictedResource) (resp *CreateRestrictedDataTokenResponse, err error) {
 	params := apis.APICall{}
 	params.Method = http.MethodPost
-	params.APIPath = config.pathPrefix() + "/restrictedDataToken"
+	params.APIPath = pathPrefix + "/restrictedDataToken"
 	params.Body, err = json.Marshal(restrictedResources)
 	if err != nil {
 		return nil, err
