@@ -6,12 +6,14 @@ import (
 )
 
 // JsonTimeISO8601 marshals time.Time to ISO 8601 format
-type JsonTimeISO8601 time.Time
+type JsonTimeISO8601 struct {
+	time.Time
+}
 
 func (t JsonTimeISO8601) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("\"%s\"", t)), nil
 }
 
 func (t JsonTimeISO8601) String() string {
-	return time.Time(t).Format(time.RFC3339)
+	return t.Format(time.RFC3339)
 }

@@ -35,9 +35,9 @@ func main() {
 	from := now.Add(-24 * time.Hour * 7)
 	spec := reports.CreateReportSpecification{
 		ReportType:     "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_INVOICING",
-		DataStartTime:  (*apis.JsonTimeISO8601)(&from),
-		DataEndTime:    (*apis.JsonTimeISO8601)(&now),
-		MarketplaceIDs: []string{"A1PA6795UKMFR9"},
+		DataStartTime:  apis.JsonTimeISO8601{Time: from},
+		DataEndTime:    apis.JsonTimeISO8601{Time: now},
+		MarketplaceIDs: []reports.MarketplaceID{reports.MarketplaceIDGermany},
 	}
 
 	resp, err := sp.Report.CreateReport(spec)

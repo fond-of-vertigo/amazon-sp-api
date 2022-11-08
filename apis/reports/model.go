@@ -92,9 +92,9 @@ type CreateReportSpecification struct {
 	// The report type.
 	ReportType string `json:"reportType"`
 	// The start of a date and time range, in ISO 8601 date time format, used for selecting the data to report. The default is now. The value must be prior to or equal to the current date and time. Not all report types make use of this.
-	DataStartTime *apis.JsonTimeISO8601 `json:"dataStartTime,omitempty"`
+	DataStartTime apis.JsonTimeISO8601 `json:"dataStartTime,omitempty"`
 	// The end of a date and time range, in ISO 8601 date time format, used for selecting the data to report. The default is now. The value must be prior to or equal to the current date and time. Not all report types make use of this.
-	DataEndTime *apis.JsonTimeISO8601 `json:"dataEndTime,omitempty"`
+	DataEndTime apis.JsonTimeISO8601 `json:"dataEndTime,omitempty"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
 	MarketplaceIDs []MarketplaceID `json:"marketplaceIds"`
 }
@@ -136,7 +136,7 @@ type ReportSchedule struct {
 	// An ISO 8601 period value that indicates how often a report should be created.
 	Period string `json:"period"`
 	// The date and time when the schedule will create its next report, in ISO 8601 date time format.
-	NextReportCreationTime *apis.JsonTimeISO8601 `json:"nextReportCreationTime,omitempty"`
+	NextReportCreationTime apis.JsonTimeISO8601 `json:"nextReportCreationTime,omitempty"`
 }
 
 // ReportScheduleList A list of report schedules.
@@ -161,5 +161,5 @@ type CreateReportScheduleSpecification struct {
 	// One of a set of predefined ISO 8601 periods that specifies how often a report should be created.
 	Period string `json:"period"`
 	// The date and time when the schedule will create its next report, in ISO 8601 date time format.
-	NextReportCreationTime *apis.JsonTimeISO8601 `json:"nextReportCreationTime,omitempty"`
+	NextReportCreationTime apis.JsonTimeISO8601 `json:"nextReportCreationTime,omitempty"`
 }
