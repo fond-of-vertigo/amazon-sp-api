@@ -8,23 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"time"
-)
-
-type Region string
-type Endpoint string
-
-const (
-	AWSRegionUSEast Region = "us-east-1"
-	AWSRegionEUWest Region = "eu-west-1"
-	AWSRegionUSWest Region = "us-west-2"
-
-	EndpointNorthAmerica Endpoint = "https://sellingpartnerapi-na.amazon.com"
-	EndpointEurope       Endpoint = "https://sellingpartnerapi-eu.amazon.com"
-	EndpointFarEast      Endpoint = "https://sellingpartnerapi-fe.amazon.com"
 )
 
 type HttpClientConfig struct {
@@ -32,9 +20,9 @@ type HttpClientConfig struct {
 	TokenUpdater       TokenUpdaterInterface
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
-	Region             Region
+	Region             constants.Region
 	RoleArn            string
-	Endpoint           Endpoint
+	Endpoint           constants.Endpoint
 }
 
 func NewHttpClient(config HttpClientConfig) (client *HttpClient, err error) {
@@ -53,9 +41,9 @@ func NewHttpClient(config HttpClientConfig) (client *HttpClient, err error) {
 
 type HttpClient struct {
 	client            *http.Client
-	endpoint          Endpoint
+	endpoint          constants.Endpoint
 	tokenUpdater      TokenUpdaterInterface
-	region            Region
+	region            constants.Region
 	roleArn           string
 	aws4Signer        *v4.Signer
 	awsStsCredentials *sts.Credentials
@@ -88,7 +76,7 @@ func (h *HttpClient) signRequest(r *http.Request) error {
 		h.awsStsCredentials == nil ||
 		h.aws4Signer.Credentials.IsExpired() ||
 		h.awsStsCredentials.Expiration.IsZero() ||
-		h.awsStsCredentials.Expiration.Round(0).Add(-ExpiryDelta).Before(time.Now().UTC()) {
+		h.awsStsCredentials.Expiration.Round(0).Add(-constants.ExpiryDelta).Before(time.Now().UTC()) {
 		if err := h.RefreshCredentials(); err != nil {
 			return fmt.Errorf("cannot refresh role credentials. Error: %w", err)
 		}

@@ -1,4 +1,4 @@
-package selling_partner_api
+package constants
 
 import "time"
 

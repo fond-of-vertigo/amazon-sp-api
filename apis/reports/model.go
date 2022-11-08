@@ -3,6 +3,7 @@ package reports
 import (
 	"fmt"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"net/url"
 	"strings"
 	"time"
@@ -11,7 +12,7 @@ import (
 // ReportModel Detailed information about the report.
 type ReportModel struct {
 	// A list of marketplace identifiers for the report.
-	MarketplaceIDs []MarketplaceID `json:"marketplaceIds,omitempty"`
+	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds,omitempty"`
 	// The identifier for the report. This identifier is unique only in combination with a seller ID.
 	ReportID string `json:"reportId"`
 	// The report type.
@@ -25,7 +26,7 @@ type ReportModel struct {
 	// The date and time when the report was created.
 	CreatedTime time.Time `json:"createdTime"`
 	// The processing status of the report.
-	ProcessingStatus ProcessingStatus `json:"processingStatus"`
+	ProcessingStatus constants.ProcessingStatus `json:"processingStatus"`
 	// The date and time when the report processing started, in ISO 8601 date time format.
 	ProcessingStartTime *time.Time `json:"processingStartTime,omitempty"`
 	// The date and time when the report processing completed, in ISO 8601 date time format.
@@ -96,7 +97,7 @@ type CreateReportSpecification struct {
 	// The end of a date and time range, in ISO 8601 date time format, used for selecting the data to report. The default is now. The value must be prior to or equal to the current date and time. Not all report types make use of this.
 	DataEndTime apis.JsonTimeISO8601 `json:"dataEndTime,omitempty"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
-	MarketplaceIDs []MarketplaceID `json:"marketplaceIds"`
+	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds"`
 }
 
 // CreateReportResponse Response schema.
@@ -130,7 +131,7 @@ type ReportSchedule struct {
 	// The report type.
 	ReportType string `json:"reportType"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
-	MarketplaceIDs []MarketplaceID `json:"marketplaceIds,omitempty"`
+	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds,omitempty"`
 	// Additional information passed to reports. This varies by report type.
 	ReportOptions *map[string]string `json:"reportOptions,omitempty"`
 	// An ISO 8601 period value that indicates how often a report should be created.
@@ -155,7 +156,7 @@ type CreateReportScheduleSpecification struct {
 	// The report type.
 	ReportType string `json:"reportType"`
 	// A list of marketplace identifiers for the report schedule.
-	MarketplaceIDs []MarketplaceID `json:"marketplaceIds"`
+	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds"`
 	// Additional information passed to reports. This varies by report type.
 	ReportOptions *map[string]string `json:"reportOptions,omitempty"`
 	// One of a set of predefined ISO 8601 periods that specifies how often a report should be created.

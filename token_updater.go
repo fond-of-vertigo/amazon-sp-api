@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/fond-of-vertigo/logger"
 	"io"
 	"net/http"
@@ -72,12 +73,12 @@ func (t *TokenUpdater) checkAccessToken() {
 			return
 		default:
 			secondsToWait := secondsUntilExpired(t.ExpireTimestamp.Load())
-			if secondsToWait <= int64(ExpiryDelta.Seconds()) {
+			if secondsToWait <= int64(constants.ExpiryDelta.Seconds()) {
 				if err := t.fetchNewToken(); err != nil {
 					t.log.Errorf(err.Error())
 				}
 			} else {
-				time.Sleep(time.Duration(secondsToWait-int64(ExpiryDelta.Seconds())) * time.Second)
+				time.Sleep(time.Duration(secondsToWait-int64(constants.ExpiryDelta.Seconds())) * time.Second)
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package selling_partner_api
 import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/tokens"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/fond-of-vertigo/logger"
 	"net/http"
 )
@@ -13,9 +14,9 @@ type Config struct {
 	RefreshToken       string
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
-	Region             Region
+	Region             constants.Region
 	RoleArn            string
-	Endpoint           Endpoint
+	Endpoint           constants.Endpoint
 	Log                logger.Logger
 }
 

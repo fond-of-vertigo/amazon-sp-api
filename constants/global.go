@@ -1,7 +1,9 @@
-package reports
+package constants
 
 type ProcessingStatus string
 type MarketplaceID string
+type Region string
+type Endpoint string
 
 const (
 	ProcessingStatusDone       ProcessingStatus = "DONE"
@@ -31,4 +33,12 @@ const (
 	MarketplaceIDSingapore             MarketplaceID = "A19VAU5U5O7RUS"
 	MarketplaceIDAustralia             MarketplaceID = "A39IBJ37TRP1C6"
 	MarketplaceIDJapan                 MarketplaceID = "A1VC38T7YXB528"
+
+	AWSRegionUSEast Region = "us-east-1"
+	AWSRegionEUWest Region = "eu-west-1"
+	AWSRegionUSWest Region = "us-west-2"
+
+	EndpointNorthAmerica Endpoint = "https://sellingpartnerapi-na.amazon.com"
+	EndpointEurope       Endpoint = "https://sellingpartnerapi-eu.amazon.com"
+	EndpointFarEast      Endpoint = "https://sellingpartnerapi-fe.amazon.com"
 )

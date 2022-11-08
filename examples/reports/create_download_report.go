@@ -5,6 +5,7 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/tokens"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/fond-of-vertigo/logger"
 	"io"
 	"net/http"
@@ -21,7 +22,7 @@ func DownloadReport(log logger.Logger, sp *amznsp.SellingPartnerClient, specific
 	log.Infof("Report with ID=%s was queued..", resp.ReportID)
 
 	var rm *reports.ReportModel
-	for rm == nil || rm.ProcessingStatus != reports.ProcessingStatusDone {
+	for rm == nil || rm.ProcessingStatus != constants.ProcessingStatusDone {
 		rm, err = sp.Report.GetReport(resp.ReportID)
 		if err != nil {
 			return nil, err
@@ -76,9 +77,9 @@ func main() {
 		RefreshToken:       "EXAMPLE_REFRESHTOKEN",
 		IAMUserAccessKeyID: "EXAMPLE_ACCESSKEY",
 		IAMUserSecretKey:   "EXAMPLE_SECRET",
-		Region:             amznsp.AWSRegionEUWest,
+		Region:             constants.AWSRegionEUWest,
 		RoleArn:            "EXAMPLE_ROLE",
-		Endpoint:           amznsp.EndpointEurope,
+		Endpoint:           constants.EndpointEurope,
 		Log:                log,
 	}
 
@@ -94,7 +95,7 @@ func main() {
 		ReportType:     "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_INVOICING",
 		DataStartTime:  apis.JsonTimeISO8601{Time: from},
 		DataEndTime:    apis.JsonTimeISO8601{Time: now},
-		MarketplaceIDs: []reports.MarketplaceID{reports.MarketplaceIDGermany},
+		MarketplaceIDs: []constants.MarketplaceID{constants.MarketplaceIDGermany},
 	}
 	r, err := DownloadReport(log, sp, spec, true)
 	if err != nil {
