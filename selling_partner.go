@@ -60,5 +60,6 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 	return &SellingPartnerClient{
 		quitSignal: quitSignal,
 		Report:     reports.Report{HttpClient: httpClient},
+		Token:      tokens.Token{HttpClient: httpClient},
 	}, nil
 }
