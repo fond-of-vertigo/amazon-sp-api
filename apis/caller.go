@@ -71,7 +71,7 @@ func executeRequest(httpClient HttpRequestDoer, req *http.Request) (*http.Respon
 	}
 	bodyBytes, err := io.ReadAll(resp.Body)
 
-	if resp.StatusCode >= 400 {
+	if !IsSuccess(resp.StatusCode) {
 		var errorList ErrorList
 		if err = json.Unmarshal(bodyBytes, &errorList); err != nil {
 			return nil, nil, fmt.Errorf("could not unmarshal ErrorList %w", err)
@@ -81,4 +81,9 @@ func executeRequest(httpClient HttpRequestDoer, req *http.Request) (*http.Respon
 	}
 
 	return resp, bodyBytes, err
+}
+
+// IsSuccess checks if the status is in range 2xx
+func IsSuccess(status int) bool {
+	return status >= http.StatusOK && status < http.StatusMultipleChoices
 }
