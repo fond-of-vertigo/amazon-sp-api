@@ -1,9 +1,43 @@
 # Amazon Selling Partner API
+Golang client implementation to the [Amazon SP-API](https://developer-docs.amazon.com/sp-api/).
+
+## Installation
+```shell
+go get -u https://github.com/fond-of-vertigo/amazon-sp-api
+```
+
+## API-Endpoints coverage
+
+- [ ] Authorization 
+- [ ] Catalog 
+- [ ] Easy Ship 
+- [ ] Fulfillment by Amazon (FBA)
+- [ ] Feeds
+- [ ] Finances
+- [ ] Fulfillment Inbound
+- [ ] Fulfillment Outbound
+- [ ] Listings
+- [ ] Merchant Fulfillment
+- [ ] Messaging
+- [ ] Notifications
+- [ ] Orders
+- [ ] Product Fees
+- [ ] Product Pricing
+- [x] [Reports](https://developer-docs.amazon.com/sp-api/docs/reports-api-v2021-06-30-reference)
+- [ ] Sales
+- [ ] Sellers
+- [ ] Service
+- [ ] Shipment
+- [ ] Solicitations
+- [x] [Tokens](https://developer-docs.amazon.com/sp-api/docs/tokens-api-v2021-03-01-reference)
+- [ ] Uploads
 
 ## CreateReport example
 The following code
 - Creates a new selling partner client
 - Sends a request to create a new report 
+
+
 ```go
 package main
 
