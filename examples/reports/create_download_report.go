@@ -13,7 +13,7 @@ import (
 
 const PollingDelay = time.Second * 5
 
-func DownloadReport(log logger.Logger, sp *amznsp.SellingPartnerClient, specification reports.CreateReportSpecification, rdtDataElements []string) ([]byte, error) {
+func DownloadReport(log logger.Logger, sp *amznsp.SellingPartnerClient, specification reports.CreateReportSpecification, useRDT bool) ([]byte, error) {
 	resp, err := sp.Report.CreateReport(specification)
 	if err != nil {
 		return nil, err
@@ -31,14 +31,13 @@ func DownloadReport(log logger.Logger, sp *amznsp.SellingPartnerClient, specific
 		time.Sleep(PollingDelay)
 	}
 	var rdt *string
-	if rdtDataElements != nil {
+	if useRDT {
 		log.Infof("Fetching RDT for %s", rm.GetDocumentAPIPath())
 		rr := tokens.CreateRestrictedDataTokenRequest{
 			RestrictedResources: []tokens.RestrictedResource{
 				{
-					Method:       http.MethodGet,
-					Path:         rm.GetDocumentAPIPath(),
-					DataElements: rdtDataElements,
+					Method: http.MethodGet,
+					Path:   rm.GetDocumentAPIPath(),
 				},
 			},
 		}
@@ -97,7 +96,7 @@ func main() {
 		DataEndTime:    (*apis.JsonTimeISO8601)(&now),
 		MarketplaceIDs: []reports.MarketplaceID{reports.MarketplaceIDGermany},
 	}
-	r, err := DownloadReport(log, sp, spec, []string{"buyerInfo", "shippingAddress", "buyerTaxInformation"})
+	r, err := DownloadReport(log, sp, spec, true)
 	if err != nil {
 		log.Errorf("Report could not be downloaded: %w", err)
 	}
