@@ -32,7 +32,11 @@ go get -u https://github.com/fond-of-vertigo/amazon-sp-api
 - [x] [Tokens](https://developer-docs.amazon.com/sp-api/docs/tokens-api-v2021-03-01-reference)
 - [ ] Uploads
 
-## CreateReport example
+## Examples
+
+Examples can be found in the [examples directory](https://github.com/fond-of-vertigo/amazon-sp-api/tree/main/examples).
+
+### CreateReport example
 The following code
 - Creates a new selling partner client
 - Sends a request to create a new report 
