@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,79 +12,115 @@ import (
 
 type HttpRequestDoer interface {
 	Do(*http.Request) (*http.Response, error)
-	GetEndpoint() string
+	GetEndpoint() constants.Endpoint
 }
 
-type APICall struct {
-	Method      string
-	APIPath     string
-	QueryParams url.Values
-	Body        []byte
-	// RestrictedDataToken is optional and can be passed to replace the existing accessToken
+type Call[responseType any] interface {
+	WithQueryParams(url.Values) Call[responseType]
+	WithBody([]byte) Call[responseType]
+	// WithRestrictedDataToken is optional and can be passed to replace the existing accessToken
+	WithRestrictedDataToken(*string) Call[responseType]
+	// Execute will return response object on success
+	Execute(httpClient HttpRequestDoer) (*responseType, CallError)
+}
+
+func NewCall[responseType any](method string, url string) Call[responseType] {
+	return &call[responseType]{
+		Method: method,
+		URL:    url,
+	}
+}
+
+type call[responseType any] struct {
+	Method              string
+	URL                 string
+	QueryParams         url.Values
+	Body                []byte
 	RestrictedDataToken *string
 }
 
-func CallAPIWithResponseType[responseType any](callParams APICall, httpClient HttpRequestDoer) (*responseType, error) {
-	_, bodyBytes, err := CallAPI(callParams, httpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	var reportResp responseType
-	err = json.Unmarshal(bodyBytes, &reportResp)
-	return &reportResp, err
+func (a *call[responseType]) WithQueryParams(queryParams url.Values) Call[responseType] {
+	a.QueryParams = queryParams
+	return a
+}
+func (a *call[responseType]) WithBody(body []byte) Call[responseType] {
+	a.Body = body
+	return a
 }
 
-func CallAPIIgnoreResponse(callParams APICall, httpClient HttpRequestDoer) error {
-	_, _, err := CallAPI(callParams, httpClient)
-	return err
+func (a *call[responseType]) WithRestrictedDataToken(token *string) Call[responseType] {
+	a.RestrictedDataToken = token
+	return a
 }
 
-func CallAPI(callParams APICall, httpClient HttpRequestDoer) (*http.Response, []byte, error) {
-	callParams.APIPath = httpClient.GetEndpoint() + callParams.APIPath
+func (a *call[responseType]) Execute(httpClient HttpRequestDoer) (*responseType, CallError) {
+	resp, err := a.execute(httpClient)
 
-	req, err := createNewRequest(callParams)
 	if err != nil {
-		return nil, nil, err
+		return nil, &callError{err: err}
 	}
-
-	if callParams.RestrictedDataToken != nil && *callParams.RestrictedDataToken != "" {
-		req.Header.Add("X-Amz-Access-Token", *callParams.RestrictedDataToken)
-	}
-
-	return executeRequest(httpClient, req)
-}
-
-func createNewRequest(callParams APICall) (*http.Request, error) {
-	apiPath, err := url.Parse(callParams.APIPath)
-	if err != nil {
-		return nil, err
-	}
-	apiPath.RawQuery = callParams.QueryParams.Encode()
-
-	return http.NewRequest(callParams.Method, apiPath.String(), bytes.NewBuffer(callParams.Body))
-}
-
-func executeRequest(httpClient HttpRequestDoer, req *http.Request) (*http.Response, []byte, error) {
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, nil, err
-	}
-	bodyBytes, err := io.ReadAll(resp.Body)
 
 	if !IsSuccess(resp.StatusCode) {
-		var errorList ErrorList
-		if err = json.Unmarshal(bodyBytes, &errorList); err != nil {
-			return nil, nil, fmt.Errorf("could not unmarshal ErrorList %w", err)
+		callErr := &callError{
+			err: fmt.Errorf("request %s %s failed with status code %d", resp.Request.Method, resp.Request.URL, resp.StatusCode),
 		}
+		if err = unmarshalBody(resp, &callErr.errorList); err != nil {
+			return nil, &callError{err: err}
+		}
+		return nil, callErr
+	}
+	if resp.ContentLength == 0 {
+		return nil, nil
+	}
+	var reportResp responseType
+	if err = unmarshalBody(resp, &reportResp); err != nil {
+		return nil, &callError{err: err}
+	}
+	return &reportResp, nil
+}
 
-		return nil, nil, fmt.Errorf("%v", errorList)
+func (a *call[responseType]) execute(httpClient HttpRequestDoer) (*http.Response, error) {
+
+	req, err := a.createNewRequest(httpClient.GetEndpoint())
+	if err != nil {
+		return nil, err
 	}
 
-	return resp, bodyBytes, err
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, err
+}
+
+func (a *call[responseType]) createNewRequest(endpoint constants.Endpoint) (*http.Request, error) {
+	callURL, err := url.Parse(string(endpoint) + a.URL)
+	if err != nil {
+		return nil, err
+	}
+	callURL.RawQuery = a.QueryParams.Encode()
+
+	req, err := http.NewRequest(a.Method, callURL.String(), bytes.NewBuffer(a.Body))
+	if err == nil {
+		if a.RestrictedDataToken != nil && *a.RestrictedDataToken != "" {
+			req.Header.Add(constants.AccessTokenHeader, *a.RestrictedDataToken)
+		}
+	}
+	return req, err
 }
 
 // IsSuccess checks if the status is in range 2xx
 func IsSuccess(status int) bool {
 	return status >= http.StatusOK && status < http.StatusMultipleChoices
+}
+func unmarshalBody(resp *http.Response, into any) error {
+	if resp.ContentLength == 0 {
+		return nil
+	}
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(bodyBytes, into)
 }

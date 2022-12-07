@@ -35,7 +35,7 @@ type ReportModel struct {
 	ReportDocumentID *string `json:"reportDocumentId,omitempty"`
 }
 
-// GetDocumentAPIPath returns the APIPath /reports/xxxx-xx-xx/documents/documentID which can be
+// GetDocumentAPIPath returns the URL /reports/xxxx-xx-xx/documents/documentID which can be
 // used for RestrictedDataTokens (RDTs) generation
 func (r *ReportModel) GetDocumentAPIPath() string {
 	if r.ReportDocumentID == nil {
@@ -45,7 +45,7 @@ func (r *ReportModel) GetDocumentAPIPath() string {
 	return pathPrefix + "/documents/" + *r.ReportDocumentID
 }
 
-type GetReportFilter struct {
+type GetReportsFilter struct {
 	// reportTypes is a list of report types used to filter reports.
 	// When reportTypes is provided, the other filter parameters
 	// (processingStatuses, marketplaceIDs, createdSince, createdUntil) and pageSize may also be provided.
@@ -62,7 +62,7 @@ type GetReportFilter struct {
 	// min 1, max 100
 	pageSize int
 	// createdSince is the earliest report creation date and time for reports to include in the response, in ISO 8601 date time format.
-	// The default is 90 days ago. Reports are retained for a maximum of 90 days.
+	// The default is 90 days ago. ReportsAPI are retained for a maximum of 90 days.
 	createdSince apis.JsonTimeISO8601
 	// createdUntil is the latest report creation date and time for reports to include in the response, in ISO 8601 date time format.
 	// The default is now.
@@ -74,7 +74,7 @@ type GetReportFilter struct {
 	nextToken string
 }
 
-func (f *GetReportFilter) GetQuery() url.Values {
+func (f *GetReportsFilter) GetQuery() url.Values {
 	q := url.Values{}
 	q.Add("reportTypes", strings.Join(f.reportTypes, ","))
 	q.Add("processingStatuses", strings.Join(f.processingStatuses, ","))
@@ -98,6 +98,11 @@ type CreateReportSpecification struct {
 	DataEndTime apis.JsonTimeISO8601 `json:"dataEndTime,omitempty"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
 	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds"`
+}
+
+// GetReportDocumentResponse Response schema.
+type GetReportDocumentResponse struct {
+	ReportDocument
 }
 
 // CreateReportResponse Response schema.
@@ -124,6 +129,11 @@ type ReportDocument struct {
 	CompressionAlgorithm *string `json:"compressionAlgorithm,omitempty"`
 }
 
+// GetReportResponse The response for the getReports operation.
+type GetReportResponse struct {
+	ReportModel
+}
+
 // ReportSchedule Detailed information about a report schedule.
 type ReportSchedule struct {
 	// The identifier for the report schedule. This identifier is unique only in combination with a seller ID.
@@ -138,6 +148,11 @@ type ReportSchedule struct {
 	Period string `json:"period"`
 	// The date and time when the schedule will create its next report, in ISO 8601 date time format.
 	NextReportCreationTime apis.JsonTimeISO8601 `json:"nextReportCreationTime,omitempty"`
+}
+
+// GetReportScheduleResponse Response schema.
+type GetReportScheduleResponse struct {
+	ReportSchedule
 }
 
 // ReportScheduleList A list of report schedules.

@@ -14,61 +14,6 @@ import (
 
 const PollingDelay = time.Second * 5
 
-func DownloadReport(log logger.Logger, sp *amznsp.SellingPartnerClient, specification reports.CreateReportSpecification, useRDT bool) ([]byte, error) {
-	resp, err := sp.Report.CreateReport(specification)
-	if err != nil {
-		return nil, err
-	}
-	log.Infof("Report with ID=%s was queued..", resp.ReportID)
-
-	var rm *reports.ReportModel
-	for rm == nil || rm.ProcessingStatus != constants.ProcessingStatusDone {
-		rm, err = sp.Report.GetReport(resp.ReportID)
-		if err != nil {
-			return nil, err
-		}
-		log.Infof("Report with ID=%s has processingStatus=%s", rm.ReportID, rm.ProcessingStatus)
-		log.Infof("Wait %v seconds", PollingDelay.Seconds())
-		time.Sleep(PollingDelay)
-	}
-	var rdt *string
-	if useRDT {
-		log.Infof("Fetching RDT for %s", rm.GetDocumentAPIPath())
-		rr := tokens.CreateRestrictedDataTokenRequest{
-			RestrictedResources: []tokens.RestrictedResource{
-				{
-					Method: http.MethodGet,
-					Path:   rm.GetDocumentAPIPath(),
-				},
-			},
-		}
-		tokenResp, err := sp.Token.CreateRestrictedDataTokenRequest(rr)
-		if err != nil {
-			return nil, err
-		}
-		log.Infof("Fetched RDT=%s", tokenResp.RestrictedDataToken)
-		rdt = tokenResp.RestrictedDataToken
-	}
-
-	doc, err := sp.Report.GetReportDocument(*rm.ReportDocumentID, rdt)
-	if err != nil {
-		return nil, err
-	}
-	log.Infof("Downloading document ID=%s via URL=%s", doc.ReportDocumentID, doc.Url)
-
-	httpResp, err := http.Get(doc.Url)
-	if err != nil {
-		return nil, err
-	}
-	defer httpResp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return bodyBytes, nil
-}
-
 func main() {
 	log := logger.New(logger.LvlDebug)
 	c := amznsp.Config{
@@ -77,7 +22,7 @@ func main() {
 		RefreshToken:       "EXAMPLE_REFRESHTOKEN",
 		IAMUserAccessKeyID: "EXAMPLE_ACCESSKEY",
 		IAMUserSecretKey:   "EXAMPLE_SECRET",
-		Region:             constants.AWSRegionEUWest,
+		Region:             constants.RegionEUWest,
 		RoleArn:            "EXAMPLE_ROLE",
 		Endpoint:           constants.EndpointEurope,
 		Log:                log,
@@ -91,15 +36,88 @@ func main() {
 
 	now := time.Now()
 	from := now.Add(-24 * time.Hour * 7)
-	spec := reports.CreateReportSpecification{
+	spec := &reports.CreateReportSpecification{
 		ReportType:     "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_INVOICING",
 		DataStartTime:  apis.JsonTimeISO8601{Time: from},
 		DataEndTime:    apis.JsonTimeISO8601{Time: now},
 		MarketplaceIDs: []constants.MarketplaceID{constants.MarketplaceIDGermany},
 	}
-	r, err := DownloadReport(log, sp, spec, true)
+	reportID, callErr := RequestReport(log, sp, spec)
+	if callErr != nil {
+		log.Errorf("Report could not be requested: %w - %v", callErr, callErr.ErrorList())
+		return
+	}
+	getReport, err := WaitForReport(log, sp, reportID)
+	if err != nil {
+		log.Errorf("Report could not be requested: %w", err)
+		log.Errorf("Error while waiting for report(%s): %w", reportID, err)
+		return
+	}
+	r, err := DownloadReport(log, sp, getReport, true)
 	if err != nil {
 		log.Errorf("Report could not be downloaded: %w", err)
+		return
 	}
-	log.Infof("Report: %s", r)
+	log.Infof("Report data: %s", r)
+}
+
+func RequestReport(log logger.Logger, sp *amznsp.SellingPartnerClient, specification *reports.CreateReportSpecification) (string, apis.CallError) {
+	createdReport, err := sp.ReportsAPI.CreateReport(specification)
+	if err != nil {
+		return "", err
+	}
+	log.Infof("API with ID=%s was queued..", createdReport.ReportID)
+	return createdReport.ReportID, nil
+}
+func WaitForReport(log logger.Logger, sp *amznsp.SellingPartnerClient, reportID string) (*reports.GetReportResponse, error) {
+	var getReport *reports.GetReportResponse
+	var err error
+	for getReport == nil || getReport.ProcessingStatus != constants.ProcessingStatusDone {
+		getReport, err = sp.ReportsAPI.GetReport(reportID)
+		if err != nil {
+			return nil, err
+		}
+		log.Infof("API with ID=%s has processingStatus=%s", getReport.ReportID, getReport.ProcessingStatus)
+		log.Infof("Wait %v seconds", PollingDelay.Seconds())
+		time.Sleep(PollingDelay)
+	}
+	return getReport, nil
+}
+func DownloadReport(log logger.Logger, sp *amznsp.SellingPartnerClient, getReport *reports.GetReportResponse, useRDT bool) ([]byte, error) {
+	var rdt *string
+	if useRDT {
+		log.Infof("Fetching RDT for %s", getReport.GetDocumentAPIPath())
+		rr := &tokens.CreateRestrictedDataTokenRequest{
+			RestrictedResources: []tokens.RestrictedResource{
+				{
+					Method: http.MethodGet,
+					Path:   getReport.GetDocumentAPIPath(),
+				},
+			},
+		}
+		tokenResp, err := sp.TokenAPI.CreateRestrictedDataTokenRequest(rr)
+		if err != nil {
+			return nil, err
+		}
+		log.Infof("Fetched RDT=%s", tokenResp.RestrictedDataToken)
+		rdt = tokenResp.RestrictedDataToken
+	}
+
+	doc, err := sp.ReportsAPI.GetReportDocument(*getReport.ReportDocumentID, rdt)
+	if err != nil {
+		return nil, err
+	}
+	log.Infof("Downloading document ID=%s via URL=%s", doc.ReportDocumentID, doc.Url)
+
+	httpResp, httpErr := http.Get(doc.Url)
+	if httpErr != nil {
+		return nil, httpErr
+	}
+	defer httpResp.Body.Close()
+
+	bodyBytes, httpErr := io.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, httpErr
+	}
+	return bodyBytes, nil
 }

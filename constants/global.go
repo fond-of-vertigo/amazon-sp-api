@@ -6,6 +6,11 @@ type Region string
 type Endpoint string
 
 const (
+	AccessTokenHeader = "X-Amz-Access-Token"
+	ServiceExecuteAPI = "execute-api"
+)
+
+const (
 	ProcessingStatusDone       ProcessingStatus = "DONE"
 	ProcessingStatusCancelled  ProcessingStatus = "CANCELLED"
 	ProcessingStatusFatal      ProcessingStatus = "FATAL"
@@ -34,9 +39,9 @@ const (
 	MarketplaceIDAustralia             MarketplaceID = "A39IBJ37TRP1C6"
 	MarketplaceIDJapan                 MarketplaceID = "A1VC38T7YXB528"
 
-	AWSRegionUSEast Region = "us-east-1"
-	AWSRegionEUWest Region = "eu-west-1"
-	AWSRegionUSWest Region = "us-west-2"
+	RegionUSEast Region = "us-east-1"
+	RegionEUWest Region = "eu-west-1"
+	RegionUSWest Region = "us-west-2"
 
 	EndpointNorthAmerica Endpoint = "https://sellingpartnerapi-na.amazon.com"
 	EndpointEurope       Endpoint = "https://sellingpartnerapi-eu.amazon.com"

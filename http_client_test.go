@@ -2,6 +2,7 @@ package selling_partner_api
 
 import (
 	"bytes"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"net/http"
 	"testing"
 )
@@ -17,7 +18,7 @@ func (m *mockTokenUpdater) GetAccessToken() string {
 func Test_httpClient_addAccessToken(t *testing.T) {
 	reqWithRDT, _ := http.NewRequest("GET", "example.com", bytes.NewBufferString("example"))
 	reqWithoutRDT, _ := http.NewRequest("GET", "example.com", bytes.NewBufferString("example"))
-	reqWithRDT.Header.Add("X-Amz-Access-Token", "EXISTING-RDT")
+	reqWithRDT.Header.Add(constants.AccessTokenHeader, "EXISTING-RDT")
 
 	type fields struct {
 		HttpClient   *http.Client
@@ -55,8 +56,8 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 				tokenUpdater: tt.fields.TokenUpdater,
 			}
 			h.addAccessTokenToHeader(tt.request)
-			if tt.request.Header.Get("X-Amz-Access-Token") != tt.wantAccessToken {
-				t.Fatalf("Token %s != %s", tt.request.Header.Get("X-Amz-Access-Token"), tt.wantAccessToken)
+			if tt.request.Header.Get(constants.AccessTokenHeader) != tt.wantAccessToken {
+				t.Fatalf("Token %s != %s", tt.request.Header.Get(constants.AccessTokenHeader), tt.wantAccessToken)
 			}
 		})
 	}

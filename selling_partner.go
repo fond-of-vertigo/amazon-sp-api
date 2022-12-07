@@ -22,8 +22,8 @@ type Config struct {
 
 type SellingPartnerClient struct {
 	quitSignal chan bool
-	Report     reports.Report
-	Token      tokens.Token
+	ReportsAPI reports.API
+	TokenAPI   tokens.API
 }
 
 // Close stops the TokenUpdater thread
@@ -60,7 +60,7 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 
 	return &SellingPartnerClient{
 		quitSignal: quitSignal,
-		Report:     reports.Report{HttpClient: httpClient},
-		Token:      tokens.Token{HttpClient: httpClient},
+		ReportsAPI: reports.NewAPI(httpClient),
+		TokenAPI:   tokens.NewAPI(httpClient),
 	}, nil
 }
