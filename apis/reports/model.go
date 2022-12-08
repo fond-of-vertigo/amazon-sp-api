@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// Type of report
 type Type string
 
 const (
@@ -145,7 +146,7 @@ type ReportSchedule struct {
 	// The identifier for the report schedule. This identifier is unique only in combination with a seller ID.
 	ReportScheduleID string `json:"reportScheduleId"`
 	// The report type.
-	ReportType string `json:"reportType"`
+	ReportType Type `json:"reportType"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
 	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds,omitempty"`
 	// Additional information passed to reports. This varies by report type.
@@ -175,7 +176,7 @@ type CreateReportScheduleResponse struct {
 // CreateReportScheduleSpecification struct for CreateReportScheduleSpecification
 type CreateReportScheduleSpecification struct {
 	// The report type.
-	ReportType string `json:"reportType"`
+	ReportType Type `json:"reportType"`
 	// A list of marketplace identifiers for the report schedule.
 	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds"`
 	// Additional information passed to reports. This varies by report type.
