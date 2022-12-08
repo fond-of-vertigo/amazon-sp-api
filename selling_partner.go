@@ -1,4 +1,4 @@
-package selling_partner_api
+package sp_api
 
 import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
@@ -20,18 +20,18 @@ type Config struct {
 	Log                logger.Logger
 }
 
-type SellingPartnerClient struct {
+type Client struct {
 	quitSignal chan bool
 	ReportsAPI reports.API
 	TokenAPI   tokens.API
 }
 
 // Close stops the TokenUpdater thread
-func (s *SellingPartnerClient) Close() {
+func (s *Client) Close() {
 	s.quitSignal <- true
 }
 
-func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
+func NewClient(config Config) (*Client, error) {
 	quitSignal := make(chan bool)
 
 	t := NewTokenUpdater(TokenUpdaterConfig{
@@ -58,7 +58,7 @@ func NewSellingPartnerClient(config Config) (*SellingPartnerClient, error) {
 		return nil, err
 	}
 
-	return &SellingPartnerClient{
+	return &Client{
 		quitSignal: quitSignal,
 		ReportsAPI: reports.NewAPI(httpClient),
 		TokenAPI:   tokens.NewAPI(httpClient),

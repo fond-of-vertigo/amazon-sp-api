@@ -1,4 +1,4 @@
-package selling_partner_api
+package sp_api
 
 import (
 	"bytes"

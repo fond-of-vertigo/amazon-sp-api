@@ -1,4 +1,4 @@
-package selling_partner_api
+package sp_api
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/google/uuid"
