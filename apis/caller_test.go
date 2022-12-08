@@ -56,7 +56,7 @@ func Test_call_Execute(t *testing.T) {
 		{
 			name: "Simple get",
 			args: args{
-				endpoint: constants.EndpointNorthAmerica,
+				endpoint: constants.NorthAmerica,
 				url:      "/message",
 				method:   http.MethodGet,
 			},
@@ -71,7 +71,7 @@ func Test_call_Execute(t *testing.T) {
 		{
 			name: "Get with restricted data token",
 			args: args{
-				endpoint:            constants.EndpointNorthAmerica,
+				endpoint:            constants.NorthAmerica,
 				url:                 "/message",
 				method:              http.MethodGet,
 				restrictedDataToken: "ABCDED",
@@ -87,7 +87,7 @@ func Test_call_Execute(t *testing.T) {
 		{
 			name: "Post body with queryParam",
 			args: args{
-				endpoint: constants.EndpointNorthAmerica,
+				endpoint: constants.NorthAmerica,
 				url:      "/message",
 				method:   http.MethodPost,
 				queryParams: map[string][]string{
@@ -109,7 +109,7 @@ func Test_call_Execute(t *testing.T) {
 		{
 			name: "Delete without body",
 			args: args{
-				endpoint: constants.EndpointNorthAmerica,
+				endpoint: constants.NorthAmerica,
 				url:      "/message/4711",
 				method:   http.MethodDelete,
 			},
@@ -120,7 +120,7 @@ func Test_call_Execute(t *testing.T) {
 		{
 			name: "Error case",
 			args: args{
-				endpoint: constants.EndpointNorthAmerica,
+				endpoint: constants.NorthAmerica,
 				url:      "/message/4711",
 				method:   http.MethodDelete,
 			},

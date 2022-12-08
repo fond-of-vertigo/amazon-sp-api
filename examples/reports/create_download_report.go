@@ -22,9 +22,9 @@ func main() {
 		RefreshToken:       "EXAMPLE_REFRESHTOKEN",
 		IAMUserAccessKeyID: "EXAMPLE_ACCESSKEY",
 		IAMUserSecretKey:   "EXAMPLE_SECRET",
-		Region:             constants.RegionEUWest,
+		Region:             constants.EUWest,
 		RoleArn:            "EXAMPLE_ROLE",
-		Endpoint:           constants.EndpointEurope,
+		Endpoint:           constants.Europe,
 		Log:                log,
 	}
 
@@ -40,7 +40,7 @@ func main() {
 		ReportType:     "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_INVOICING",
 		DataStartTime:  apis.JsonTimeISO8601{Time: from},
 		DataEndTime:    apis.JsonTimeISO8601{Time: now},
-		MarketplaceIDs: []constants.MarketplaceID{constants.MarketplaceIDGermany},
+		MarketplaceIDs: []constants.MarketplaceID{constants.Germany},
 	}
 	reportID, callErr := RequestReport(log, sp, spec)
 	if callErr != nil {
@@ -72,7 +72,7 @@ func RequestReport(log logger.Logger, sp *amznsp.SellingPartnerClient, specifica
 func WaitForReport(log logger.Logger, sp *amznsp.SellingPartnerClient, reportID string) (*reports.GetReportResponse, error) {
 	var getReport *reports.GetReportResponse
 	var err error
-	for getReport == nil || getReport.ProcessingStatus != constants.ProcessingStatusDone {
+	for getReport == nil || !getReport.ProcessingStatus.IsDone() {
 		getReport, err = sp.ReportsAPI.GetReport(reportID)
 		if err != nil {
 			return nil, err
