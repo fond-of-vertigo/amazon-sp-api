@@ -8,18 +8,27 @@ import (
 
 const pathPrefix = "/tokens/2021-03-01"
 
-type Token struct {
+type API interface {
+	// CreateRestrictedDataTokenRequest returns a Restricted Data Token (RDT) for one or more restricted resources that you specify.
+	CreateRestrictedDataTokenRequest(*CreateRestrictedDataTokenRequest) (*CreateRestrictedDataTokenResponse, apis.CallError)
+}
+
+func NewAPI(httpClient apis.HttpRequestDoer) API {
+	return &api{
+		HttpClient: httpClient,
+	}
+}
+
+type api struct {
 	HttpClient apis.HttpRequestDoer
 }
 
-// CreateRestrictedDataTokenRequest returns a Restricted Data Token (RDT) for one or more restricted resources that you specify.
-func (t *Token) CreateRestrictedDataTokenRequest(restrictedResources CreateRestrictedDataTokenRequest) (resp *CreateRestrictedDataTokenResponse, err error) {
-	params := apis.APICall{}
-	params.Method = http.MethodPost
-	params.APIPath = pathPrefix + "/restrictedDataToken"
-	params.Body, err = json.Marshal(restrictedResources)
+func (t *api) CreateRestrictedDataTokenRequest(restrictedResources *CreateRestrictedDataTokenRequest) (*CreateRestrictedDataTokenResponse, apis.CallError) {
+	body, err := json.Marshal(restrictedResources)
 	if err != nil {
-		return nil, err
+		return nil, apis.NewError(err)
 	}
-	return apis.CallAPIWithResponseType[CreateRestrictedDataTokenResponse](params, t.HttpClient)
+	return apis.NewCall[CreateRestrictedDataTokenResponse](http.MethodPost, pathPrefix+"/restrictedDataToken").
+		WithBody(body).
+		Execute(t.HttpClient)
 }

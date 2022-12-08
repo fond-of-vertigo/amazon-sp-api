@@ -1,4 +1,4 @@
-package selling_partner_api
+package sp_api
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/google/uuid"
@@ -60,13 +60,13 @@ func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
 	return h.client.Do(req)
 }
 
-func (h *HttpClient) GetEndpoint() string {
-	return string(h.endpoint)
+func (h *HttpClient) GetEndpoint() constants.Endpoint {
+	return h.endpoint
 }
 
 func (h *HttpClient) addAccessTokenToHeader(req *http.Request) {
-	if req.Header.Get("X-Amz-Access-Token") == "" {
-		req.Header.Add("X-Amz-Access-Token", h.tokenUpdater.GetAccessToken())
+	if req.Header.Get(constants.AccessTokenHeader) == "" {
+		req.Header.Add(constants.AccessTokenHeader, h.tokenUpdater.GetAccessToken())
 	}
 }
 
@@ -92,7 +92,7 @@ func (h *HttpClient) signRequest(r *http.Request) error {
 		body = bytes.NewReader(payload)
 	}
 
-	_, err := h.aws4Signer.Sign(r, body, "execute-api", string(h.region), time.Now().UTC())
+	_, err := h.aws4Signer.Sign(r, body, constants.ServiceExecuteAPI, string(h.region), time.Now().UTC())
 
 	return err
 }
