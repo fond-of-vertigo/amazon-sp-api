@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+// Type of report
+type Type string
+
+const (
+	FBAAmazonFulfilledShipmentsInvoicing Type = "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_INVOICING"
+)
+
 // ReportModel Detailed information about the report.
 type ReportModel struct {
 	// A list of marketplace identifiers for the report.
@@ -16,7 +23,7 @@ type ReportModel struct {
 	// The identifier for the report. This identifier is unique only in combination with a seller ID.
 	ReportID string `json:"reportId"`
 	// The report type.
-	ReportType string `json:"reportType"`
+	ReportType Type `json:"reportType"`
 	// The start of a date and time range used for selecting the data to report.
 	DataStartTime *time.Time `json:"dataStartTime,omitempty"`
 	// The end of a date and time range used for selecting the data to report.
@@ -91,7 +98,7 @@ type CreateReportSpecification struct {
 	// Additional information passed to reports. This varies by report type.
 	ReportOptions *map[string]string `json:"reportOptions,omitempty"`
 	// The report type.
-	ReportType string `json:"reportType"`
+	ReportType Type `json:"reportType"`
 	// The start of a date and time range, in ISO 8601 date time format, used for selecting the data to report. The default is now. The value must be prior to or equal to the current date and time. Not all report types make use of this.
 	DataStartTime apis.JsonTimeISO8601 `json:"dataStartTime,omitempty"`
 	// The end of a date and time range, in ISO 8601 date time format, used for selecting the data to report. The default is now. The value must be prior to or equal to the current date and time. Not all report types make use of this.
@@ -139,7 +146,7 @@ type ReportSchedule struct {
 	// The identifier for the report schedule. This identifier is unique only in combination with a seller ID.
 	ReportScheduleID string `json:"reportScheduleId"`
 	// The report type.
-	ReportType string `json:"reportType"`
+	ReportType Type `json:"reportType"`
 	// A list of marketplace identifiers. The report document's contents will contain data for all of the specified marketplaces, unless the report type indicates otherwise.
 	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds,omitempty"`
 	// Additional information passed to reports. This varies by report type.
@@ -169,7 +176,7 @@ type CreateReportScheduleResponse struct {
 // CreateReportScheduleSpecification struct for CreateReportScheduleSpecification
 type CreateReportScheduleSpecification struct {
 	// The report type.
-	ReportType string `json:"reportType"`
+	ReportType Type `json:"reportType"`
 	// A list of marketplace identifiers for the report schedule.
 	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds"`
 	// Additional information passed to reports. This varies by report type.
