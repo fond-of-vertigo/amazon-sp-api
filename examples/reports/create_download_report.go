@@ -16,7 +16,7 @@ const PollingDelay = time.Second * 5
 
 func main() {
 	log := logger.New(logger.LvlDebug)
-	c := sp_api.Config{
+	config := sp_api.Config{
 		ClientID:           "EXAMPLE_CLIENTID",
 		ClientSecret:       "EXAMPLE_SECRET",
 		RefreshToken:       "EXAMPLE_REFRESHTOKEN",
@@ -28,7 +28,7 @@ func main() {
 		Log:                log,
 	}
 
-	client, err := sp_api.NewClient(c)
+	client, err := sp_api.NewClient(config)
 	if err != nil {
 		panic(err)
 	}
