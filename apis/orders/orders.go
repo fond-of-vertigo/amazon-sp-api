@@ -17,18 +17,15 @@ type API interface {
 	GetOrderItems(orderID string, nextToken *string) (*apis.CallResponse[GetOrderItemsResponse], error)
 }
 
-var (
-	RateLimitGetOrderItems *rate.Limiter
-)
-
 type api struct {
-	HttpClient httpx.Client
+	HttpClient             httpx.Client
+	RateLimitGetOrderItems *rate.Limiter
 }
 
 func NewAPI(httpClient httpx.Client) API {
-	RateLimitGetOrderItems = rate.NewLimiter(rate.Every(time.Second/2), 30)
 	return &api{
-		HttpClient: httpClient,
+		HttpClient:             httpClient,
+		RateLimitGetOrderItems: rate.NewLimiter(rate.Every(time.Second/2), 30),
 	}
 }
 
@@ -39,6 +36,6 @@ func (a *api) GetOrderItems(orderID string, nextToken *string) (*apis.CallRespon
 	}
 	return apis.NewCall[GetOrderItemsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/orderItems").
 		WithQueryParams(params).
-		WithRateLimiter(RateLimitGetOrderItems).
+		WithRateLimiter(a.RateLimitGetOrderItems).
 		Execute(a.HttpClient)
 }

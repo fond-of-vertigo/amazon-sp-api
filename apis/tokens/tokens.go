@@ -11,24 +11,21 @@ import (
 
 const pathPrefix = "/tokens/2021-03-01"
 
-var (
-	RateLimitCreateRestrictedDataToken *rate.Limiter
-)
-
 type API interface {
 	// CreateRestrictedDataTokenRequest returns a Restricted Data Token (RDT) for one or more restricted resources that you specify.
 	CreateRestrictedDataTokenRequest(*CreateRestrictedDataTokenRequest) (*apis.CallResponse[CreateRestrictedDataTokenResponse], error)
 }
 
 func NewAPI(httpClient httpx.Client) API {
-	RateLimitCreateRestrictedDataToken = rate.NewLimiter(rate.Every(time.Second), 10)
 	return &api{
-		HttpClient: httpClient,
+		HttpClient:                         httpClient,
+		RateLimitCreateRestrictedDataToken: rate.NewLimiter(rate.Every(time.Second), 10),
 	}
 }
 
 type api struct {
-	HttpClient httpx.Client
+	HttpClient                         httpx.Client
+	RateLimitCreateRestrictedDataToken *rate.Limiter
 }
 
 func (t *api) CreateRestrictedDataTokenRequest(restrictedResources *CreateRestrictedDataTokenRequest) (*apis.CallResponse[CreateRestrictedDataTokenResponse], error) {
@@ -38,6 +35,6 @@ func (t *api) CreateRestrictedDataTokenRequest(restrictedResources *CreateRestri
 	}
 	return apis.NewCall[CreateRestrictedDataTokenResponse](http.MethodPost, pathPrefix+"/restrictedDataToken").
 		WithBody(body).
-		WithRateLimiter(RateLimitCreateRestrictedDataToken).
+		WithRateLimiter(t.RateLimitCreateRestrictedDataToken).
 		Execute(t.HttpClient)
 }
