@@ -2,9 +2,11 @@ package apis
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
+	"golang.org/x/time/rate"
 	"io"
 	"net/http"
 	"net/url"
@@ -21,6 +23,7 @@ type Call[responseType any] interface {
 	// WithRestrictedDataToken is optional and can be passed to replace the existing accessToken
 	WithRestrictedDataToken(*string) Call[responseType]
 	WithParseErrorListOnError(bool) Call[responseType]
+	WithRateLimiter(rateLimiter *rate.Limiter) Call[responseType]
 	// Execute will return response object on success
 	Execute(httpClient httpx.Client) (*CallResponse[responseType], error)
 }
@@ -39,6 +42,7 @@ type call[responseType any] struct {
 	Body                  []byte
 	RestrictedDataToken   *string
 	ParseErrorListOnError bool
+	RateLimiter           *rate.Limiter
 }
 
 func (a *call[responseType]) WithQueryParams(queryParams url.Values) Call[responseType] {
@@ -59,7 +63,10 @@ func (a *call[responseType]) WithParseErrorListOnError(parseErrList bool) Call[r
 	a.ParseErrorListOnError = parseErrList
 	return a
 }
-
+func (a *call[responseType]) WithRateLimiter(rateLimiter *rate.Limiter) Call[responseType] {
+	a.RateLimiter = rateLimiter
+	return a
+}
 func (a *call[responseType]) Execute(httpClient httpx.Client) (*CallResponse[responseType], error) {
 	resp, err := a.execute(httpClient)
 
@@ -92,7 +99,12 @@ func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, e
 	if err != nil {
 		return nil, err
 	}
-
+	if a.RateLimiter != nil {
+		err = a.RateLimiter.Wait(context.Background())
+		if err != nil {
+			return nil, err
+		}
+	}
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err

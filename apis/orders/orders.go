@@ -3,8 +3,10 @@ package orders
 import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
+	"golang.org/x/time/rate"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 const pathPrefix = "/orders/v0"
@@ -16,12 +18,14 @@ type API interface {
 }
 
 type api struct {
-	HttpClient httpx.Client
+	HttpClient             httpx.Client
+	RateLimitGetOrderItems *rate.Limiter
 }
 
 func NewAPI(httpClient httpx.Client) API {
 	return &api{
-		HttpClient: httpClient,
+		HttpClient:             httpClient,
+		RateLimitGetOrderItems: rate.NewLimiter(rate.Every(time.Second/2), 30),
 	}
 }
 
@@ -32,5 +36,6 @@ func (a *api) GetOrderItems(orderID string, nextToken *string) (*apis.CallRespon
 	}
 	return apis.NewCall[GetOrderItemsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/orderItems").
 		WithQueryParams(params).
+		WithRateLimiter(a.RateLimitGetOrderItems).
 		Execute(a.HttpClient)
 }
