@@ -4,10 +4,16 @@ import (
 	"encoding/json"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
+	"golang.org/x/time/rate"
 	"net/http"
+	"time"
 )
 
 const pathPrefix = "/tokens/2021-03-01"
+
+var (
+	RateLimitCreateRestrictedDataToken *rate.Limiter
+)
 
 type API interface {
 	// CreateRestrictedDataTokenRequest returns a Restricted Data Token (RDT) for one or more restricted resources that you specify.
@@ -15,6 +21,7 @@ type API interface {
 }
 
 func NewAPI(httpClient httpx.Client) API {
+	RateLimitCreateRestrictedDataToken = rate.NewLimiter(rate.Every(time.Second), 10)
 	return &api{
 		HttpClient: httpClient,
 	}
@@ -31,5 +38,6 @@ func (t *api) CreateRestrictedDataTokenRequest(restrictedResources *CreateRestri
 	}
 	return apis.NewCall[CreateRestrictedDataTokenResponse](http.MethodPost, pathPrefix+"/restrictedDataToken").
 		WithBody(body).
+		WithRateLimiter(RateLimitCreateRestrictedDataToken).
 		Execute(t.HttpClient)
 }
