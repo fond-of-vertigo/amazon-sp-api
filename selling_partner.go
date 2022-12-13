@@ -5,6 +5,7 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/tokens"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"github.com/fond-of-vertigo/logger"
 	"net/http"
 )
@@ -36,26 +37,26 @@ func (s *Client) Close() {
 func NewClient(config Config) (*Client, error) {
 	quitSignal := make(chan bool)
 
-	t := NewTokenUpdater(TokenUpdaterConfig{
+	tokenUpdater := httpx.NewTokenUpdater(httpx.TokenUpdaterConfig{
 		RefreshToken: config.RefreshToken,
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
 		Logger:       config.Log,
 	})
-	if err := t.RunInBackground(); err != nil {
+	if err := tokenUpdater.RunInBackground(); err != nil {
 		return nil, err
 	}
 
-	h := HttpClientConfig{
-		client:             &http.Client{},
+	h := httpx.ClientConfig{
+		HttpClient:         &http.Client{},
 		Endpoint:           config.Endpoint,
-		TokenUpdater:       t,
+		TokenUpdater:       tokenUpdater,
 		IAMUserAccessKeyID: config.IAMUserAccessKeyID,
 		IAMUserSecretKey:   config.IAMUserSecretKey,
 		Region:             config.Region,
 		RoleArn:            config.RoleArn,
 	}
-	httpClient, err := NewHttpClient(h)
+	httpClient, err := httpx.NewClient(h)
 	if err != nil {
 		return nil, err
 	}
