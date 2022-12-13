@@ -1,4 +1,4 @@
-package sp_api
+package httpx
 
 import (
 	"bytes"
@@ -14,15 +14,18 @@ type mockTokenUpdater struct {
 func (m *mockTokenUpdater) GetAccessToken() string {
 	return m.ReturnAccessToken
 }
+func (m *mockTokenUpdater) RunInBackground() error {
+	return nil
+}
 
 func Test_httpClient_addAccessToken(t *testing.T) {
-	reqWithRDT, _ := http.NewRequest("GET", "example.com", bytes.NewBufferString("example"))
-	reqWithoutRDT, _ := http.NewRequest("GET", "example.com", bytes.NewBufferString("example"))
+	reqWithRDT, _ := http.NewRequest(http.MethodGet, "example.com", bytes.NewBufferString("example"))
+	reqWithoutRDT, _ := http.NewRequest(http.MethodGet, "example.com", bytes.NewBufferString("example"))
 	reqWithRDT.Header.Add(constants.AccessTokenHeader, "EXISTING-RDT")
 
 	type fields struct {
 		HttpClient   *http.Client
-		TokenUpdater TokenUpdaterInterface
+		TokenUpdater TokenUpdater
 	}
 	tests := []struct {
 		name            string
@@ -51,9 +54,9 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &HttpClient{
-				client:       tt.fields.HttpClient,
-				tokenUpdater: tt.fields.TokenUpdater,
+			h := &client{
+				HttpClient:   tt.fields.HttpClient,
+				TokenUpdater: tt.fields.TokenUpdater,
 			}
 			h.addAccessTokenToHeader(tt.request)
 			if tt.request.Header.Get(constants.AccessTokenHeader) != tt.wantAccessToken {

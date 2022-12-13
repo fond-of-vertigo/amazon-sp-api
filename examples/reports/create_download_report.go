@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	sp_api "github.com/fond-of-vertigo/amazon-sp-api"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
@@ -16,7 +17,7 @@ const PollingDelay = time.Second * 5
 
 func main() {
 	log := logger.New(logger.LvlDebug)
-	config := sp_api.Config{
+	c := sp_api.Config{
 		ClientID:           "EXAMPLE_CLIENTID",
 		ClientSecret:       "EXAMPLE_SECRET",
 		RefreshToken:       "EXAMPLE_REFRESHTOKEN",
@@ -28,7 +29,7 @@ func main() {
 		Log:                log,
 	}
 
-	client, err := sp_api.NewClient(config)
+	client, err := sp_api.NewClient(c)
 	if err != nil {
 		panic(err)
 	}
@@ -42,9 +43,9 @@ func main() {
 		DataEndTime:    apis.JsonTimeISO8601{Time: now},
 		MarketplaceIDs: []constants.MarketplaceID{constants.Germany},
 	}
-	reportID, callErr := RequestReport(log, client, spec)
-	if callErr != nil {
-		log.Errorf("Report could not be requested: %w - %v", callErr, callErr.ErrorList())
+	reportID, err := RequestReport(log, client, spec)
+	if err != nil {
+		log.Errorf("Report could not be requested: %w - %v", err, err)
 		return
 	}
 	getReport, err := WaitForReport(log, client, reportID)
@@ -61,27 +62,33 @@ func main() {
 	log.Infof("Report data: %s", r)
 }
 
-func RequestReport(log logger.Logger, client *sp_api.Client, specification *reports.CreateReportSpecification) (string, apis.CallError) {
-	createdReport, err := client.ReportsAPI.CreateReport(specification)
+func RequestReport(log logger.Logger, client *sp_api.Client, specification *reports.CreateReportSpecification) (string, error) {
+	createdReportResp, err := client.ReportsAPI.CreateReport(specification)
 	if err != nil {
 		return "", err
 	}
-	log.Infof("API with ID=%s was queued..", createdReport.ReportID)
-	return createdReport.ReportID, nil
+	if createdReportResp.IsError() {
+		return "", fmt.Errorf("creating report failed with status %v. ErrorList: %v", createdReportResp.Status, createdReportResp.ErrorList)
+	}
+	log.Infof("API with ID=%s was queued..", createdReportResp.ResponseBody.ReportID)
+	return createdReportResp.ResponseBody.ReportID, nil
 }
 func WaitForReport(log logger.Logger, client *sp_api.Client, reportID string) (*reports.GetReportResponse, error) {
-	var getReport *reports.GetReportResponse
+	var getReportResp *apis.CallResponse[reports.GetReportResponse]
 	var err error
-	for getReport == nil || !getReport.ProcessingStatus.IsDone() {
-		getReport, err = client.ReportsAPI.GetReport(reportID)
+	for getReportResp == nil || !getReportResp.ResponseBody.ProcessingStatus.IsDone() {
+		getReportResp, err = client.ReportsAPI.GetReport(reportID)
 		if err != nil {
 			return nil, err
 		}
-		log.Infof("API with ID=%s has processingStatus=%s", getReport.ReportID, getReport.ProcessingStatus)
+		if getReportResp.IsError() {
+			return nil, fmt.Errorf("waiting for report(id: %v) failed with status %v. ErrorList: %v", reportID, getReportResp.Status, getReportResp.ErrorList)
+		}
+		log.Infof("API with ID=%s has processingStatus=%s", getReportResp.ResponseBody.ReportID, getReportResp.ResponseBody.ProcessingStatus)
 		log.Infof("Wait %v seconds", PollingDelay.Seconds())
 		time.Sleep(PollingDelay)
 	}
-	return getReport, nil
+	return getReportResp.ResponseBody, nil
 }
 func DownloadReport(log logger.Logger, client *sp_api.Client, getReport *reports.GetReportResponse, useRDT bool) ([]byte, error) {
 	var rdt *string
@@ -99,17 +106,23 @@ func DownloadReport(log logger.Logger, client *sp_api.Client, getReport *reports
 		if err != nil {
 			return nil, err
 		}
-		log.Infof("Fetched RDT=%s", tokenResp.RestrictedDataToken)
-		rdt = tokenResp.RestrictedDataToken
+		if tokenResp.IsError() {
+			return nil, fmt.Errorf("create RestrictedDataToken failed with status %v. ErrorList: %v", tokenResp.Status, tokenResp.ErrorList)
+		}
+		log.Infof("Fetched RDT=%s", tokenResp.ResponseBody.RestrictedDataToken)
+		rdt = tokenResp.ResponseBody.RestrictedDataToken
 	}
 
-	doc, err := client.ReportsAPI.GetReportDocument(*getReport.ReportDocumentID, rdt)
+	getRepDocResp, err := client.ReportsAPI.GetReportDocument(*getReport.ReportDocumentID, rdt)
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("Downloading document ID=%s via URL=%s", doc.ReportDocumentID, doc.Url)
+	if getRepDocResp.IsError() {
+		return nil, fmt.Errorf("create GetReportDocument request failed with status %v. ErrorList: %v", getRepDocResp.Status, getRepDocResp.ErrorList)
+	}
+	log.Infof("Downloading document ID=%s via URL=%s", getRepDocResp.ResponseBody.ReportDocumentID, getRepDocResp.ResponseBody.Url)
 
-	httpResp, httpErr := http.Get(doc.Url)
+	httpResp, httpErr := http.Get(getRepDocResp.ResponseBody.Url)
 	if httpErr != nil {
 		return nil, httpErr
 	}

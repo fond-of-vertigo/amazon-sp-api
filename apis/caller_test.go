@@ -40,11 +40,11 @@ func Test_call_Execute(t *testing.T) {
 		call                call[any]
 		queryParams         url.Values
 		reqBodyObject       any
+		parseErrList        bool
 	}
 	type want struct {
-		url    string
-		object *dummyBody
-		errors *ErrorList
+		url  string
+		resp CallResponse[dummyBody]
 	}
 	type testCase struct {
 		name    string
@@ -62,9 +62,11 @@ func Test_call_Execute(t *testing.T) {
 			},
 			want: want{
 				url: "https://sellingpartnerapi-na.amazon.com/message",
-				object: &dummyBody{
-					Message: "All ok",
-					Number:  4711.0815,
+				resp: CallResponse[dummyBody]{
+					ResponseBody: &dummyBody{
+						Message: "All ok",
+						Number:  4711.0815,
+					},
 				},
 			},
 		},
@@ -78,9 +80,11 @@ func Test_call_Execute(t *testing.T) {
 			},
 			want: want{
 				url: "https://sellingpartnerapi-na.amazon.com/message",
-				object: &dummyBody{
-					Message: "All ok",
-					Number:  4711.0815,
+				resp: CallResponse[dummyBody]{
+					ResponseBody: &dummyBody{
+						Message: "All ok",
+						Number:  4711.0815,
+					},
 				},
 			},
 		},
@@ -100,9 +104,11 @@ func Test_call_Execute(t *testing.T) {
 			},
 			want: want{
 				url: "https://sellingpartnerapi-na.amazon.com/message?final=true",
-				object: &dummyBody{
-					Message: "All ok",
-					Number:  4711.0815,
+				resp: CallResponse[dummyBody]{
+					ResponseBody: &dummyBody{
+						Message: "All ok",
+						Number:  4711.0815,
+					},
 				},
 			},
 		},
@@ -126,16 +132,17 @@ func Test_call_Execute(t *testing.T) {
 			},
 			want: want{
 				url: "https://sellingpartnerapi-na.amazon.com/message/4711",
-				errors: &ErrorList{
-					Errors: []Error{
-						{
-							Message: "Oooops",
-							Code:    "4711",
+				resp: CallResponse[dummyBody]{
+					ErrorList: &ErrorList{
+						Errors: []Error{
+							{
+								Message: "Oooops",
+								Code:    "4711",
+							},
 						},
 					},
 				},
 			},
-			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -145,7 +152,7 @@ func Test_call_Execute(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			mockResp, err := mockResponse(tt.want.object, tt.want.errors)
+			mockResp, err := mockResponse(&tt.want.resp)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -157,7 +164,8 @@ func Test_call_Execute(t *testing.T) {
 			// when:
 			call := NewCall[dummyBody](tt.args.method, tt.args.url).
 				WithQueryParams(tt.args.queryParams).
-				WithBody(reqBodyBytes)
+				WithBody(reqBodyBytes).
+				WithParseErrorListOnError(tt.want.resp.ErrorList != nil)
 			if tt.args.restrictedDataToken != "" {
 				call = call.WithRestrictedDataToken(&tt.args.restrictedDataToken)
 			}
@@ -194,27 +202,41 @@ func Test_call_Execute(t *testing.T) {
 				return
 			}
 
-			if tt.want.object == nil && !reflect.ValueOf(got).IsNil() {
+			if tt.want.resp.ResponseBody == nil && !reflect.ValueOf(got.ResponseBody).IsNil() {
 				t.Errorf("Execute(): response different. got = '%v', want nil", got)
 			} else {
 				if tt.wantErr {
-					if tt.want.object != nil && !reflect.DeepEqual(got, tt.want.object) {
-						t.Errorf("Execute(): error response different. got = '%v', want '%v'", got, tt.want.object)
+					if tt.want.resp.ResponseBody != nil && !reflect.DeepEqual(got.ResponseBody, tt.want.resp.ResponseBody) {
+						t.Errorf("Execute(): error response different. got = '%v', want '%v'", got.ResponseBody, tt.want.resp.ResponseBody)
 					}
 				} else {
-					if tt.want.object != nil && !reflect.DeepEqual(got, tt.want.object) {
-						t.Errorf("Execute(): response different. got = '%v', want '%v'", got, tt.want.object)
+					if tt.want.resp.ResponseBody != nil && !reflect.DeepEqual(got.ResponseBody, tt.want.resp.ResponseBody) {
+						t.Errorf("Execute(): response different. got = '%v', want '%v'", got.ResponseBody, tt.want.resp.ResponseBody)
 					}
 				}
 			}
-
+			if diff(tt.want.resp.ResponseBody, got.ResponseBody) {
+				t.Errorf("Execute(): responseBody different. want = '%v', got '%v'", tt.want.resp.ErrorList, got.ErrorList)
+			}
+			if diff(tt.want.resp.ErrorList, got.ErrorList) {
+				t.Errorf("Execute(): errorList different. want = '%v', got '%v'", tt.want.resp.ErrorList, got.ErrorList)
+			}
 		})
 	}
 }
-
-func mockResponse(bodyObject *dummyBody, errors *ErrorList) (*http.Response, error) {
-	if errors != nil {
-		bodyBytes, err := getJSONBytes(errors)
+func diff(want any, got any) bool {
+	if want == nil && !reflect.ValueOf(want).IsNil() {
+		return true
+	} else {
+		if want != nil && !reflect.DeepEqual(got, want) {
+			return true
+		}
+	}
+	return false
+}
+func mockResponse(callResp *CallResponse[dummyBody]) (*http.Response, error) {
+	if callResp.ErrorList != nil {
+		bodyBytes, err := getJSONBytes(callResp.ErrorList)
 		if err != nil {
 			return nil, err
 		}
@@ -225,7 +247,7 @@ func mockResponse(bodyObject *dummyBody, errors *ErrorList) (*http.Response, err
 			ContentLength: int64(len(bodyBytes)),
 		}, nil
 	}
-	bodyBytes, err := getJSONBytes(bodyObject)
+	bodyBytes, err := getJSONBytes(callResp.ResponseBody)
 	if err != nil {
 		return nil, err
 	}

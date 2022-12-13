@@ -3,25 +3,26 @@ package apis
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"io"
 	"net/http"
 	"net/url"
 )
 
-type HttpRequestDoer interface {
-	Do(*http.Request) (*http.Response, error)
-	GetEndpoint() constants.Endpoint
+type CallResponse[responseBodyType any] struct {
+	Status       int
+	ResponseBody *responseBodyType
+	ErrorList    *ErrorList
 }
-
 type Call[responseType any] interface {
 	WithQueryParams(url.Values) Call[responseType]
 	WithBody([]byte) Call[responseType]
 	// WithRestrictedDataToken is optional and can be passed to replace the existing accessToken
 	WithRestrictedDataToken(*string) Call[responseType]
+	WithParseErrorListOnError(bool) Call[responseType]
 	// Execute will return response object on success
-	Execute(httpClient HttpRequestDoer) (*responseType, CallError)
+	Execute(httpClient httpx.Client) (*CallResponse[responseType], error)
 }
 
 func NewCall[responseType any](method string, url string) Call[responseType] {
@@ -32,11 +33,12 @@ func NewCall[responseType any](method string, url string) Call[responseType] {
 }
 
 type call[responseType any] struct {
-	Method              string
-	URL                 string
-	QueryParams         url.Values
-	Body                []byte
-	RestrictedDataToken *string
+	Method                string
+	URL                   string
+	QueryParams           url.Values
+	Body                  []byte
+	RestrictedDataToken   *string
+	ParseErrorListOnError bool
 }
 
 func (a *call[responseType]) WithQueryParams(queryParams url.Values) Call[responseType] {
@@ -53,33 +55,38 @@ func (a *call[responseType]) WithRestrictedDataToken(token *string) Call[respons
 	return a
 }
 
-func (a *call[responseType]) Execute(httpClient HttpRequestDoer) (*responseType, CallError) {
+func (a *call[responseType]) WithParseErrorListOnError(parseErrList bool) Call[responseType] {
+	a.ParseErrorListOnError = parseErrList
+	return a
+}
+
+func (a *call[responseType]) Execute(httpClient httpx.Client) (*CallResponse[responseType], error) {
 	resp, err := a.execute(httpClient)
 
 	if err != nil {
-		return nil, &callError{err: err}
+		return nil, err
 	}
 
-	if !IsSuccess(resp.StatusCode) {
-		callErr := &callError{
-			err: fmt.Errorf("request %s %s failed with status code %d", resp.Request.Method, resp.Request.URL, resp.StatusCode),
+	callResp := &CallResponse[responseType]{
+		Status: resp.StatusCode,
+	}
+
+	if a.ParseErrorListOnError && !callResp.IsSuccess() {
+		if err = unmarshalBody(resp, &callResp.ErrorList); err != nil {
+			return nil, err
 		}
-		if err = unmarshalBody(resp, &callErr.errorList); err != nil {
-			return nil, &callError{err: err}
+		return callResp, nil
+	}
+	if resp.ContentLength > 0 {
+		if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
+			return nil, err
 		}
-		return nil, callErr
 	}
-	if resp.ContentLength == 0 {
-		return nil, nil
-	}
-	var reportResp responseType
-	if err = unmarshalBody(resp, &reportResp); err != nil {
-		return nil, &callError{err: err}
-	}
-	return &reportResp, nil
+
+	return callResp, nil
 }
 
-func (a *call[responseType]) execute(httpClient HttpRequestDoer) (*http.Response, error) {
+func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, error) {
 
 	req, err := a.createNewRequest(httpClient.GetEndpoint())
 	if err != nil {
@@ -111,8 +118,13 @@ func (a *call[responseType]) createNewRequest(endpoint constants.Endpoint) (*htt
 }
 
 // IsSuccess checks if the status is in range 2xx
-func IsSuccess(status int) bool {
-	return status >= http.StatusOK && status < http.StatusMultipleChoices
+func (r *CallResponse[any]) IsSuccess() bool {
+	return r.Status >= http.StatusOK && r.Status < http.StatusMultipleChoices
+}
+
+// IsError checks if the status is in range 4xx - 5xx
+func (r *CallResponse[any]) IsError() bool {
+	return r.Status >= http.StatusBadRequest && r.Status < 600
 }
 func unmarshalBody(resp *http.Response, into any) error {
 	if resp.ContentLength == 0 {
