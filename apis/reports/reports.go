@@ -77,7 +77,8 @@ func (r *api) GetReports(filter *GetReportsFilter) (*apis.CallResponse[GetReport
 	}
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/reports").
 		WithQueryParams(filter.GetQuery()).
-		WithRateLimiter(r.RateLimitGetReports).
+		WithParseErrorListOnError(true).
+    WithRateLimiter(r.RateLimitGetReports).
 		Execute(r.HttpClient)
 }
 
