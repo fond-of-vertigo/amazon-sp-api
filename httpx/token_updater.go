@@ -1,4 +1,4 @@
-package sp_api
+package httpx
 
 import (
 	"bytes"
@@ -20,18 +20,19 @@ type TokenUpdaterConfig struct {
 	QuitSignal   chan bool
 }
 
-type TokenUpdaterInterface interface {
+type TokenUpdater interface {
 	GetAccessToken() string
+	RunInBackground() error
 }
 
-type TokenUpdater struct {
-	accessToken     *atomic.Value
+type tokenUpdater struct {
+	AccessToken     *atomic.Value
 	ExpireTimestamp *atomic.Int64
-	refreshToken    string
-	clientID        string
-	clientSecret    string
-	log             logger.Logger
-	quitSignal      chan bool
+	RefreshToken    string
+	ClientID        string
+	ClientSecret    string
+	Log             logger.Logger
+	QuitSignal      chan bool
 }
 type AccessTokenResponse struct {
 	AccessToken      string `json:"access_token"`
@@ -42,21 +43,21 @@ type AccessTokenResponse struct {
 	ErrorDescription string `json:"error_description"`
 }
 
-func NewTokenUpdater(config TokenUpdaterConfig) *TokenUpdater {
-	t := TokenUpdater{
-		refreshToken: config.RefreshToken,
-		clientID:     config.ClientID,
-		clientSecret: config.ClientSecret,
-		log:          config.Logger,
-		quitSignal:   config.QuitSignal,
+func NewTokenUpdater(config TokenUpdaterConfig) TokenUpdater {
+	t := tokenUpdater{
+		RefreshToken: config.RefreshToken,
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
+		Log:          config.Logger,
+		QuitSignal:   config.QuitSignal,
 	}
 	return &t
 }
 
-func (t *TokenUpdater) RunInBackground() error {
+func (t *tokenUpdater) RunInBackground() error {
 	t.ExpireTimestamp = &atomic.Int64{}
-	t.accessToken = &atomic.Value{}
-	t.log.Debugf("Fetching first access-token")
+	t.AccessToken = &atomic.Value{}
+	t.Log.Debugf("Fetching first access-tokenAPI")
 	if err := t.fetchNewToken(); err != nil {
 		return err
 	}
@@ -65,17 +66,17 @@ func (t *TokenUpdater) RunInBackground() error {
 	return nil
 }
 
-func (t *TokenUpdater) checkAccessToken() {
+func (t *tokenUpdater) checkAccessToken() {
 	for {
 		select {
-		case <-t.quitSignal:
-			t.log.Infof("Received signal to stop access-token updates.")
+		case <-t.QuitSignal:
+			t.Log.Infof("Received signal to stop access-tokenAPI updates.")
 			return
 		default:
 			secondsToWait := secondsUntilExpired(t.ExpireTimestamp.Load())
 			if secondsToWait <= int64(constants.ExpiryDelta.Seconds()) {
 				if err := t.fetchNewToken(); err != nil {
-					t.log.Errorf(err.Error())
+					t.Log.Errorf(err.Error())
 				}
 			} else {
 				time.Sleep(time.Duration(secondsToWait-int64(constants.ExpiryDelta.Seconds())) * time.Second)
@@ -84,16 +85,16 @@ func (t *TokenUpdater) checkAccessToken() {
 	}
 }
 
-func (t *TokenUpdater) GetAccessToken() string {
-	return fmt.Sprintf("%v", t.accessToken.Load())
+func (t *tokenUpdater) GetAccessToken() string {
+	return fmt.Sprintf("%v", t.AccessToken.Load())
 }
 
-func (t *TokenUpdater) fetchNewToken() error {
+func (t *tokenUpdater) fetchNewToken() error {
 	reqBody, _ := json.Marshal(map[string]string{
 		"grant_type":    "refresh_token",
-		"refresh_token": t.refreshToken,
-		"client_id":     t.clientID,
-		"client_secret": t.clientSecret,
+		"refresh_token": t.RefreshToken,
+		"client_id":     t.ClientID,
+		"client_secret": t.ClientSecret,
 	})
 
 	resp, err := http.Post(
@@ -107,7 +108,7 @@ func (t *TokenUpdater) fetchNewToken() error {
 
 	defer func(Body io.ReadCloser) {
 		if err := Body.Close(); err != nil {
-			t.log.Errorf(err.Error())
+			t.Log.Errorf(err.Error())
 		}
 	}(resp.Body)
 
@@ -121,7 +122,7 @@ func (t *TokenUpdater) fetchNewToken() error {
 		return fmt.Errorf("RefreshToken response parse failed. Body: %s", string(respBodyBytes))
 	}
 	if parsedResp.AccessToken != "" {
-		t.accessToken.Swap(parsedResp.AccessToken)
+		t.AccessToken.Swap(parsedResp.AccessToken)
 
 		expireTimestamp := time.Now().UTC().Add(time.Duration(parsedResp.ExpiresIn) * time.Second)
 		t.ExpireTimestamp.Swap(expireTimestamp.Unix())
