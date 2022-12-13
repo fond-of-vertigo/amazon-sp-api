@@ -1,5 +1,7 @@
 package orders
 
+import "github.com/fond-of-vertigo/amazon-sp-api/apis"
+
 type ResponsibleParty string
 type DeemedResellerCategory string
 type Model string
@@ -71,7 +73,7 @@ type PointsGrantedDetail struct {
 // ProductInfoDetail on the number of items.
 type ProductInfoDetail struct {
 	// The total number of items that are included in the ASIN.
-	NumberOfItems *int
+	NumberOfItems *string
 }
 
 // OrderItem is a single order item.
@@ -117,7 +119,7 @@ type OrderItem struct {
 	// The discount on the COD fee.
 	CODFeeDiscount *Money
 	// When true, the item is a gift.
-	IsGift *bool
+	IsGift *string
 	// The condition of the item as described by the seller.
 	ConditionNote *string
 	// The condition of the item.
@@ -164,5 +166,6 @@ type OrderItemsList struct {
 
 // The GetOrderItemsResponse schema for the getOrderItems operation.
 type GetOrderItemsResponse struct {
-	OrderItemsList
+	Payload OrderItemsList
+	Errors  apis.ErrorList
 }
