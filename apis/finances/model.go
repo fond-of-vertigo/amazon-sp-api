@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// ListFinancialEventGroupsFilter is used to filter financial events in the ListFinancialEventGroups call.
 type ListFinancialEventGroupsFilter struct {
 	MaxResultsPerPage                *int
 	FinancialEventGroupStartedBefore *apis.JsonTimeISO8601
@@ -14,6 +15,7 @@ type ListFinancialEventGroupsFilter struct {
 	NextToken                        *string
 }
 
+// GetQuery returns the query parameters for ListFinancialEventGroupsFilter.
 func (f *ListFinancialEventGroupsFilter) GetQuery() url.Values {
 	q := url.Values{}
 	if f.MaxResultsPerPage != nil {
@@ -32,11 +34,14 @@ func (f *ListFinancialEventGroupsFilter) GetQuery() url.Values {
 	return q
 }
 
+// ListFinancialEventsByIDFilter is used to filter financial events in the
+// ListFinancialEventsByGroupID and ListFinancialEventsByOrderID calls.
 type ListFinancialEventsByIDFilter struct {
 	MaxResultsPerPage *int
 	NextToken         *string
 }
 
+// GetQuery returns the query parameters for ListFinancialEventsByIDFilter.
 func (f *ListFinancialEventsByIDFilter) GetQuery() url.Values {
 	q := url.Values{}
 	if f.MaxResultsPerPage != nil {
@@ -49,6 +54,7 @@ func (f *ListFinancialEventsByIDFilter) GetQuery() url.Values {
 	return q
 }
 
+// ListFinancialEventsFilter is used to filter financial events in the ListFinancialEvents call.
 type ListFinancialEventsFilter struct {
 	MaxResultsPerPage *int
 	PostedAfter       *apis.JsonTimeISO8601
@@ -56,6 +62,7 @@ type ListFinancialEventsFilter struct {
 	NextToken         *string
 }
 
+// GetQuery returns the query parameters for ListFinancialEventsFilter.
 func (f *ListFinancialEventsFilter) GetQuery() url.Values {
 	q := url.Values{}
 	if f.MaxResultsPerPage != nil {
