@@ -2,8 +2,77 @@ package finances
 
 import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"net/url"
+	"strconv"
 	"time"
 )
+
+type ListFinancialEventGroupsFilter struct {
+	MaxResultsPerPage                *int
+	FinancialEventGroupStartedBefore *apis.JsonTimeISO8601
+	FinancialEventGroupStartedAfter  *apis.JsonTimeISO8601
+	NextToken                        *string
+}
+
+func (f *ListFinancialEventGroupsFilter) GetQuery() url.Values {
+	q := url.Values{}
+	if f.MaxResultsPerPage != nil {
+		q.Add("MaxResultsPerPage", strconv.Itoa(*f.MaxResultsPerPage))
+	}
+	if f.FinancialEventGroupStartedBefore != nil {
+		q.Add("FinancialEventGroupStartedBefore", f.FinancialEventGroupStartedBefore.String())
+	}
+	if f.FinancialEventGroupStartedAfter != nil {
+		q.Add("FinancialEventGroupStartedAfter", f.FinancialEventGroupStartedAfter.String())
+	}
+	if f.NextToken != nil {
+		q.Add("NextToken", *f.NextToken)
+	}
+
+	return q
+}
+
+type ListFinancialEventsByIDFilter struct {
+	MaxResultsPerPage *int
+	NextToken         *string
+}
+
+func (f *ListFinancialEventsByIDFilter) GetQuery() url.Values {
+	q := url.Values{}
+	if f.MaxResultsPerPage != nil {
+		q.Add("MaxResultsPerPage", strconv.Itoa(*f.MaxResultsPerPage))
+	}
+	if f.NextToken != nil {
+		q.Add("NextToken", *f.NextToken)
+	}
+
+	return q
+}
+
+type ListFinancialEventsFilter struct {
+	MaxResultsPerPage *int
+	PostedAfter       *apis.JsonTimeISO8601
+	PostedBefore      *apis.JsonTimeISO8601
+	NextToken         *string
+}
+
+func (f *ListFinancialEventsFilter) GetQuery() url.Values {
+	q := url.Values{}
+	if f.MaxResultsPerPage != nil {
+		q.Add("MaxResultsPerPage", strconv.Itoa(*f.MaxResultsPerPage))
+	}
+	if f.PostedAfter != nil {
+		q.Add("PostedAfter", f.PostedAfter.String())
+	}
+	if f.PostedBefore != nil {
+		q.Add("PostedBefore", f.PostedBefore.String())
+	}
+	if f.NextToken != nil {
+		q.Add("NextToken", *f.NextToken)
+	}
+
+	return q
+}
 
 // AdjustmentEvent An adjustment to the seller's account.
 type AdjustmentEvent struct {
