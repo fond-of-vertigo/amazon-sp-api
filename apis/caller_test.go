@@ -95,7 +95,8 @@ func Test_call_Execute(t *testing.T) {
 				url:      "/message",
 				method:   http.MethodPost,
 				queryParams: map[string][]string{
-					"final": {"true"},
+					"final":     {"true"},
+					"messageID": {"1234"},
 				},
 				reqBodyObject: &dummyBody{
 					Message: "Hello there...",
@@ -103,7 +104,7 @@ func Test_call_Execute(t *testing.T) {
 				},
 			},
 			want: want{
-				url: "https://sellingpartnerapi-na.amazon.com/message?final=true",
+				url: "https://sellingpartnerapi-na.amazon.com/message?final=true&messageID=1234",
 				resp: CallResponse[dummyBody]{
 					ResponseBody: &dummyBody{
 						Message: "All ok",
