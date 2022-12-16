@@ -1,6 +1,7 @@
 package sp_api
 
 import (
+	"github.com/fond-of-vertigo/amazon-sp-api/apis/finances"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/orders"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/tokens"
@@ -23,10 +24,11 @@ type Config struct {
 }
 
 type Client struct {
-	quitSignal chan bool
-	OrdersAPI  orders.API
-	ReportsAPI reports.API
-	TokenAPI   tokens.API
+	quitSignal  chan bool
+	FinancesAPI finances.API
+	OrdersAPI   orders.API
+	ReportsAPI  reports.API
+	TokenAPI    tokens.API
 }
 
 // Close stops the TokenUpdater thread
@@ -62,9 +64,10 @@ func NewClient(config Config) (*Client, error) {
 	}
 
 	return &Client{
-		quitSignal: quitSignal,
-		OrdersAPI:  orders.NewAPI(httpClient),
-		ReportsAPI: reports.NewAPI(httpClient),
-		TokenAPI:   tokens.NewAPI(httpClient),
+		quitSignal:  quitSignal,
+		FinancesAPI: finances.NewAPI(httpClient),
+		OrdersAPI:   orders.NewAPI(httpClient),
+		ReportsAPI:  reports.NewAPI(httpClient),
+		TokenAPI:    tokens.NewAPI(httpClient),
 	}, nil
 }
