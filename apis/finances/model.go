@@ -1,10 +1,12 @@
 package finances
 
 import (
-	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"encoding/json"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 )
 
 // ListFinancialEventGroupsFilter is used to filter financial events in the ListFinancialEventGroups call.
@@ -110,8 +112,8 @@ type AdjustmentItem struct {
 // Currency A currency type and amount.
 type Currency struct {
 	// The three-digit currency code in ISO 4217 format.
-	CurrencyCode   *string  `json:"CurrencyCode,omitempty"`
-	CurrencyAmount *float32 `json:"CurrencyAmount,omitempty"`
+	CurrencyCode   *string      `json:"CurrencyCode,omitempty"`
+	CurrencyAmount *json.Number `json:"CurrencyAmount,omitempty"`
 }
 
 // AffordabilityExpenseEvent An expense related to an affordability promotion.
