@@ -13,7 +13,65 @@ import (
 type Type string
 
 const (
-	FBAAmazonFulfilledShipmentsInvoicing Type = "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_INVOICING"
+	// FBA Sales Reports
+	FBAAmazonFulfilledShipmentsReport      Type = "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_GENERAL"
+	FBAAmazonFulfilledShipmentsInvoicing   Type = "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_INVOICING"
+	FBAAmazonFulfilledShipmentsReportTax   Type = "GET_AMAZON_FULFILLED_SHIPMENTS_DATA_TAX"
+	FBAFlatFileAllOrdersReportbyLastUpdate Type = "GET_FLAT_FILE_ALL_ORDERS_DATA_BY_LAST_UPDATE_GENERAL"
+	FBAFlatFileAllOrdersReportbyOrderDate  Type = "GET_FLAT_FILE_ALL_ORDERS_DATA_BY_ORDER_DATE_GENERAL"
+	FBAXMLAllOrdersReportbyLastUpdate      Type = "GET_XML_ALL_ORDERS_DATA_BY_LAST_UPDATE_GENERAL"
+	FBAXMLAllOrdersReportbyOrderDate       Type = "GET_XML_ALL_ORDERS_DATA_BY_ORDER_DATE_GENERAL"
+	FBACustomerShipmentSalesReport         Type = "GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_SALES_DATA"
+	FBAPromotionsReport                    Type = "GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_PROMOTION_DATA"
+	FBACustomerTaxes                       Type = "GET_FBA_FULFILLMENT_CUSTOMER_TAXES_DATA"
+	FBARemoteFulfillmentEligibility        Type = "GET_REMOTE_FULFILLMENT_ELIGIBILITY"
+
+	// FBA Inventory Reports
+	FBAInventoryReconciliationReport     Type = "GET_FBA_RECONCILIATION_REPORT_DATA"
+	FBAAmazonFulfilledInventoryReport    Type = "GET_AFN_INVENTORY_DATA"
+	FBAMultiCountryInventoryReport       Type = "GET_AFN_INVENTORY_DATA_BY_COUNTRY"
+	FBAInventoryLedgerReportSummaryView  Type = "GET_LEDGER_SUMMARY_VIEW_DATA"
+	FBAInventoryLedgerReportDetailedView Type = "GET_LEDGER_DETAIL_VIEW_DATA"
+	FBADailyInventoryHistoryReport       Type = "GET_FBA_FULFILLMENT_CURRENT_INVENTORY_DATA"
+	FBAMonthlyInventoryHistoryReport     Type = "GET_FBA_FULFILLMENT_MONTHLY_INVENTORY_DATA"
+	FBAReceivedInventoryReport           Type = "GET_FBA_FULFILLMENT_INVENTORY_RECEIPTS_DATA"
+	FBAReservedInventoryReport           Type = "GET_RESERVED_INVENTORY_DATA"
+	FBAInventoryEventDetailReport        Type = "GET_FBA_FULFILLMENT_INVENTORY_SUMMARY_DATA"
+	FBAInventoryAdjustmentsReport        Type = "GET_FBA_FULFILLMENT_INVENTORY_ADJUSTMENTS_DATA"
+	FBAInventoryHealthReport             Type = "GET_FBA_FULFILLMENT_INVENTORY_HEALTH_DATA"
+	FBAManageInventory                   Type = "GET_FBA_MYI_UNSUPPRESSED_INVENTORY_DATA"
+	FBAManageInventoryArchived           Type = "GET_FBA_MYI_ALL_INVENTORY_DATA"
+	FBARestockInventoryReport            Type = "GET_RESTOCK_INVENTORY_RECOMMENDATIONS_REPORT"
+	FBAInboundPerformanceReport          Type = "GET_FBA_FULFILLMENT_INBOUND_NONCOMPLIANCE_DATA"
+	FBAStrandedInventoryReport           Type = "GET_STRANDED_INVENTORY_UI_DATA"
+	FBABulkFixStrandedInventoryReport    Type = "GET_STRANDED_INVENTORY_LOADER_DATA"
+	FBAInventoryAgeReport                Type = "GET_FBA_INVENTORY_AGED_DATA"
+	FBAManageExcessInventoryReport       Type = "GET_EXCESS_INVENTORY_DATA"
+	FBAStorageFeesReport                 Type = "GET_FBA_STORAGE_FEE_CHARGES_DATA"
+	FBAGetReportExchangeData             Type = "GET_PRODUCT_EXCHANGE_DATA"
+	FBAManageInventoryHealthReport       Type = "GET_FBA_INVENTORY_PLANNING_DATA"
+	FBAInventoryStorageOverageFeesReport Type = "GET_FBA_OVERAGE_FEE_CHARGES_DATA"
+
+	// FBA Payments Reports
+	FBAFeePreviewReport                Type = "GET_FBA_ESTIMATED_FBA_FEES_TXT_DATA"
+	FBAReimbursementsReport            Type = "GET_FBA_REIMBURSEMENTS_DATA"
+	FBALongTermStorageFeeChargesReport Type = "GET_FBA_FULFILLMENT_LONGTERM_STORAGE_FEE_CHARGES_DATA"
+
+	// FBA Customer Concessions Reports
+	FBAReturnsReport      Type = "GET_FBA_FULFILLMENT_CUSTOMER_RETURNS_DATA"
+	FBAReplacementsReport Type = "GET_FBA_FULFILLMENT_CUSTOMER_SHIPMENT_REPLACEMENT_DATA"
+
+	// FBA Removals Reports
+	FBARecommendedRemovalReport    Type = "GET_FBA_RECOMMENDED_REMOVAL_DATA"
+	FBARemovalOrderDetailReport    Type = "GET_FBA_FULFILLMENT_REMOVAL_ORDER_DETAIL_DATA"
+	FBARemovalShipmentDetailReport Type = "GET_FBA_FULFILLMENT_REMOVAL_SHIPMENT_DETAIL_DATA"
+
+	// FBA Small and Light Reports
+	FBASmallLightInventoryReport Type = "GET_FBA_UNO_INVENTORY_DATA"
+
+	//FBA Subscribe and Save reports
+	FBASubscribeAndSaveForecastReport    Type = "GET_FBA_SNS_FORECAST_DATA"
+	FBASubscribeAndSavePerformanceReport Type = "GET_FBA_SNS_PERFORMANCE_DATA"
 )
 
 // ReportModel Detailed information about the report.
