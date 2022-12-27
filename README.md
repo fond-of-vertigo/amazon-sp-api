@@ -14,7 +14,7 @@ go get -u https://github.com/fond-of-vertigo/amazon-sp-api
 - [ ] Catalog
 - [ ] Easy Ship
 - [ ] Fulfillment by Amazon (FBA)
-- [ ] Feeds
+- [x] [Feeds](https://developer-docs.amazon.com/sp-api/docs/feeds-api-v2021-06-30-reference)
 - [x] [Finances](https://developer-docs.amazon.com/sp-api/docs/finances-api-reference)
 - [ ] Fulfillment Inbound
 - [ ] Fulfillment Outbound
