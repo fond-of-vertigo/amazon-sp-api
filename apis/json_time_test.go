@@ -17,11 +17,35 @@ func TestJsonTimeISO8601_MarshalJSON(t1 *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "Seconds",
 			fields: fields{
 				Time: time.Date(2022, 02, 26, 9, 12, 11, 0, time.UTC),
 			},
 			want:    []byte("\"2022-02-26T09:12:11Z\""),
+			wantErr: false,
+		},
+		{
+			name: "Millis",
+			fields: fields{
+				Time: time.Date(2022, 02, 26, 9, 12, 11, 326*1000*1000, time.UTC),
+			},
+			want:    []byte("\"2022-02-26T09:12:11.326Z\""),
+			wantErr: false,
+		},
+		{
+			name: "Micros",
+			fields: fields{
+				Time: time.Date(2022, 02, 26, 9, 12, 11, 326415*1000, time.UTC),
+			},
+			want:    []byte("\"2022-02-26T09:12:11.326415Z\""),
+			wantErr: false,
+		},
+		{
+			name: "Nanos",
+			fields: fields{
+				Time: time.Date(2022, 02, 26, 9, 12, 11, 326415123, time.UTC),
+			},
+			want:    []byte("\"2022-02-26T09:12:11.326415123Z\""),
 			wantErr: false,
 		},
 	}
@@ -36,7 +60,7 @@ func TestJsonTimeISO8601_MarshalJSON(t1 *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t1.Errorf("MarshalJSON() got = %v, want %v", got, tt.want)
+				t1.Errorf("MarshalJSON() got = %s, want %s", got, tt.want)
 			}
 		})
 	}
