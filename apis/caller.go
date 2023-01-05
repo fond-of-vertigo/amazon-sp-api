@@ -162,5 +162,6 @@ func unmarshalBody(resp *http.Response, into any) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("Raw response:\n", string(bodyBytes))
 	return json.Unmarshal(bodyBytes, into)
 }
