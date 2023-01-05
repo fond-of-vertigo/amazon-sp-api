@@ -2,11 +2,12 @@ package finances
 
 import (
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"golang.org/x/time/rate"
-	"net/http"
-	"time"
 )
 
 const pathPrefix = "/finances/v0"
@@ -33,10 +34,10 @@ type api struct {
 func NewAPI(httpClient httpx.Client) API {
 	return &api{
 		HttpClient:                            httpClient,
-		RateLimitListFinancialEventGroups:     rate.NewLimiter(rate.Every(time.Second/2), 30),
-		RateLimitListFinancialEventsByGroupID: rate.NewLimiter(rate.Every(time.Second/2), 30),
-		RateLimitListFinancialEventsByOrderID: rate.NewLimiter(rate.Every(time.Second/2), 30),
-		RateLimitListFinancialEvents:          rate.NewLimiter(rate.Every(time.Second/2), 30),
+		RateLimitListFinancialEventGroups:     rate.NewLimiter(rate.Every(time.Millisecond*2100), 1),
+		RateLimitListFinancialEventsByGroupID: rate.NewLimiter(rate.Every(time.Millisecond*2100), 1),
+		RateLimitListFinancialEventsByOrderID: rate.NewLimiter(rate.Every(time.Millisecond*2100), 1),
+		RateLimitListFinancialEvents:          rate.NewLimiter(rate.Every(time.Millisecond*2100), 1),
 	}
 }
 
