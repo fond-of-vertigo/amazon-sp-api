@@ -34,10 +34,10 @@ type api struct {
 func NewAPI(httpClient httpx.Client) API {
 	return &api{
 		HttpClient:                            httpClient,
-		RateLimitListFinancialEventGroups:     rate.NewLimiter(rate.Every(time.Second/2), 1),
-		RateLimitListFinancialEventsByGroupID: rate.NewLimiter(rate.Every(time.Second/2), 1),
-		RateLimitListFinancialEventsByOrderID: rate.NewLimiter(rate.Every(time.Second/2), 1),
-		RateLimitListFinancialEvents:          rate.NewLimiter(rate.Every(time.Second/2), 1),
+		RateLimitListFinancialEventGroups:     rate.NewLimiter(rate.Every(time.Minute/30), 30),
+		RateLimitListFinancialEventsByGroupID: rate.NewLimiter(rate.Every(time.Minute/30), 30),
+		RateLimitListFinancialEventsByOrderID: rate.NewLimiter(rate.Every(time.Minute/30), 30),
+		RateLimitListFinancialEvents:          rate.NewLimiter(rate.Every(time.Minute/30), 30),
 	}
 }
 
