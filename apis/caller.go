@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/fond-of-vertigo/amazon-sp-api/constants"
-	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
-	"golang.org/x/time/rate"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
+	"golang.org/x/time/rate"
 )
 
 type CallResponse[responseBodyType any] struct {
@@ -138,6 +140,20 @@ func (r *CallResponse[any]) IsSuccess() bool {
 func (r *CallResponse[any]) IsError() bool {
 	return r.Status >= http.StatusBadRequest && r.Status < 600
 }
+
+// ErrorsAsString returns all errors as string or an empty string.
+func (r *CallResponse[any]) ErrorsAsString() string {
+	if r == nil || !r.IsError() {
+		return ""
+	}
+
+	msg := fmt.Sprintf("received HTTP status code %d", r.Status)
+	if r.ErrorList != nil {
+		msg = fmt.Sprintf("\n%v", r.ErrorList)
+	}
+	return msg
+}
+
 func unmarshalBody(resp *http.Response, into any) error {
 	if resp.ContentLength == 0 {
 		return nil
