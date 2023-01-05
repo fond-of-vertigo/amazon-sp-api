@@ -149,7 +149,7 @@ func (r *CallResponse[any]) ErrorsAsString() string {
 
 	msg := fmt.Sprintf("received HTTP status code %d", r.Status)
 	if r.ErrorList != nil {
-		msg = fmt.Sprintf("\n%v", r.ErrorList)
+		msg = fmt.Sprintf("%s\n%v", msg, r.ErrorList)
 	}
 	return msg
 }
