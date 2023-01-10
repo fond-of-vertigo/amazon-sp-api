@@ -2,16 +2,17 @@ package apis
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
+	"strconv"
+	"time"
 
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
-	"golang.org/x/time/rate"
 )
 
 type CallResponse[responseBodyType any] struct {
@@ -25,7 +26,6 @@ type Call[responseType any] interface {
 	// WithRestrictedDataToken is optional and can be passed to replace the existing accessToken
 	WithRestrictedDataToken(*string) Call[responseType]
 	WithParseErrorListOnError(bool) Call[responseType]
-	WithRateLimiter(rateLimiter *rate.Limiter) Call[responseType]
 	// Execute will return response object on success
 	Execute(httpClient httpx.Client) (*CallResponse[responseType], error)
 }
@@ -44,7 +44,6 @@ type call[responseType any] struct {
 	Body                  []byte
 	RestrictedDataToken   *string
 	ParseErrorListOnError bool
-	RateLimiter           *rate.Limiter
 }
 
 func (a *call[responseType]) WithQueryParams(queryParams url.Values) Call[responseType] {
@@ -65,13 +64,9 @@ func (a *call[responseType]) WithParseErrorListOnError(parseErrList bool) Call[r
 	a.ParseErrorListOnError = parseErrList
 	return a
 }
-func (a *call[responseType]) WithRateLimiter(rateLimiter *rate.Limiter) Call[responseType] {
-	a.RateLimiter = rateLimiter
-	return a
-}
+
 func (a *call[responseType]) Execute(httpClient httpx.Client) (*CallResponse[responseType], error) {
 	resp, err := a.execute(httpClient)
-
 	if err != nil {
 		return nil, err
 	}
@@ -96,23 +91,56 @@ func (a *call[responseType]) Execute(httpClient httpx.Client) (*CallResponse[res
 }
 
 func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, error) {
+	attempts := 1
+	for {
+		if attempts >= constants.MaxRetryCount {
+			return nil, fmt.Errorf("max retry count of %d reached", constants.MaxRetryCount)
+		}
 
-	req, err := a.createNewRequest(httpClient.GetEndpoint())
-	if err != nil {
-		return nil, err
-	}
-	if a.RateLimiter != nil {
-		err = a.RateLimiter.Wait(context.Background())
+		req, err := a.createNewRequest(httpClient.GetEndpoint())
 		if err != nil {
 			return nil, err
 		}
+
+		resp, err := httpClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			if err := waitForRetry(resp); err != nil {
+				return resp, err
+			}
+			attempts++
+			continue
+		}
+		return resp, err
 	}
-	resp, err := httpClient.Do(req)
+}
+
+func waitForRetry(resp *http.Response) error {
+	backOffTime, err := getBackoffDelay(resp)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return resp, err
+	time.Sleep(backOffTime)
+	return nil
+}
+
+func getBackoffDelay(resp *http.Response) (time.Duration, error) {
+	backOffTimeHeader := resp.Header.Get(constants.RateLimitHeader)
+	if backOffTimeHeader == "" {
+		return constants.RetryDelay, nil
+	}
+
+	reqPerSecond, err := strconv.ParseFloat(backOffTimeHeader, 64)
+	if err != nil {
+		return constants.RetryDelay, fmt.Errorf("error parsing backoff delay: %w", err)
+	}
+
+	backOffTime := time.Duration(math.Abs(1/reqPerSecond)) * time.Second
+	return backOffTime, nil
 }
 
 func (a *call[responseType]) createNewRequest(endpoint constants.Endpoint) (*http.Request, error) {

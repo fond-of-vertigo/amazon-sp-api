@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type dummyHttpClient struct {
@@ -264,4 +265,65 @@ func getJSONBytes(obj any) ([]byte, error) {
 		return []byte{}, nil
 	}
 	return json.Marshal(obj)
+}
+
+func Test_getBackoffDelay(t *testing.T) {
+	tests := []struct {
+		name    string
+		arg     *http.Response
+		want    time.Duration
+		wantErr bool
+	}{
+		{
+			name:    "Simple",
+			arg:     newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
+			want:    2 * time.Second,
+			wantErr: false,
+		},
+		{
+			name:    "No Header set",
+			arg:     &http.Response{},
+			want:    constants.RetryDelay,
+			wantErr: false,
+		},
+		{
+			name:    "Header set but empty",
+			arg:     newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: ""}),
+			want:    constants.RetryDelay,
+			wantErr: false,
+		},
+		{
+			name:    "Header set but invalid",
+			arg:     newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "invalid"}),
+			want:    constants.RetryDelay,
+			wantErr: true,
+		},
+		{
+			name:    "Header set to negative",
+			arg:     newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "-2"}),
+			want:    time.Duration(1/2) * time.Second,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getBackoffDelay(tt.arg)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getBackoffDelay() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("getBackoffDelay() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func newMockResponseWithHeader(headerMap map[string]string) *http.Response {
+	r := http.Response{}
+	r.Header = http.Header{}
+	for k, v := range headerMap {
+		r.Header.Set(k, v)
+	}
+	return &r
 }
