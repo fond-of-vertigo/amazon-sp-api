@@ -83,12 +83,12 @@ type GetFeedsRequestFilter struct {
 func (f *GetFeedsRequestFilter) GetQuery() url.Values {
 	q := url.Values{}
 
-	feedTypes := strings.Join(f.FeedTypes[:10], ",")
+	feedTypes := strings.Join(apis.FirstNElementsOfSlice[string](f.FeedTypes, 10), ",")
 	if feedTypes != "" {
 		q.Set("feedTypes", feedTypes)
 	}
 
-	marketplaceIds := strings.Join(f.MarketplaceIDs[:10], ",")
+	marketplaceIds := strings.Join(apis.FirstNElementsOfSlice[string](f.MarketplaceIDs, 10), ",")
 	if marketplaceIds != "" {
 		q.Set("marketplaceIds", marketplaceIds)
 	}
