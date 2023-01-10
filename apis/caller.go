@@ -91,12 +91,8 @@ func (a *call[responseType]) Execute(httpClient httpx.Client) (*CallResponse[res
 }
 
 func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, error) {
-	attempts := 1
+	attempts := 0
 	for {
-		if attempts >= constants.MaxRetryCount {
-			return nil, fmt.Errorf("max retry count of %d reached", constants.MaxRetryCount)
-		}
-
 		req, err := a.createNewRequest(httpClient.GetEndpoint())
 		if err != nil {
 			return nil, err
@@ -108,18 +104,21 @@ func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, e
 		}
 
 		if resp.StatusCode == http.StatusTooManyRequests {
-			if err := waitForRetry(resp); err != nil {
+			if err := waitForRetry(resp, attempts); err != nil {
 				return resp, err
 			}
 			attempts++
+			if attempts >= constants.MaxRetryCount {
+				return nil, fmt.Errorf("max retry count of %d reached", constants.MaxRetryCount)
+			}
 			continue
 		}
 		return resp, err
 	}
 }
 
-func waitForRetry(resp *http.Response) error {
-	backOffTime, err := getBackoffDelay(resp)
+func waitForRetry(resp *http.Response, attempt int) error {
+	backOffTime, err := getBackoffDelay(resp, attempt)
 	if err != nil {
 		return err
 	}
@@ -128,18 +127,20 @@ func waitForRetry(resp *http.Response) error {
 	return nil
 }
 
-func getBackoffDelay(resp *http.Response) (time.Duration, error) {
+func getBackoffDelay(resp *http.Response, attempt int) (time.Duration, error) {
+	exponentialBackoff := time.Duration(math.Pow(2, float64(attempt)))
+
 	backOffTimeHeader := resp.Header.Get(constants.RateLimitHeader)
 	if backOffTimeHeader == "" {
-		return constants.RetryDelay, nil
+		return constants.StartingRetryDelay * exponentialBackoff, nil
 	}
 
 	reqPerSecond, err := strconv.ParseFloat(backOffTimeHeader, 64)
 	if err != nil {
-		return constants.RetryDelay, fmt.Errorf("error parsing backoff delay: %w", err)
+		return constants.StartingRetryDelay * exponentialBackoff, fmt.Errorf("error parsing backoff delay: %w", err)
 	}
 
-	backOffTime := time.Duration(math.Abs(1/reqPerSecond)) * time.Second
+	backOffTime := time.Duration(math.Abs(1/reqPerSecond)) * time.Second * exponentialBackoff
 	return backOffTime, nil
 }
 

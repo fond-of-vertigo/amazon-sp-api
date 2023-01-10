@@ -268,46 +268,93 @@ func getJSONBytes(obj any) ([]byte, error) {
 }
 
 func Test_getBackoffDelay(t *testing.T) {
+	type args struct {
+		resp        *http.Response
+		currAttempt int
+	}
 	tests := []struct {
 		name    string
-		arg     *http.Response
+		args    args
 		want    time.Duration
 		wantErr bool
 	}{
 		{
-			name:    "Simple",
-			arg:     newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
+			name: "Simple",
+			args: args{
+				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
+				currAttempt: 0,
+			},
 			want:    2 * time.Second,
 			wantErr: false,
 		},
 		{
-			name:    "No Header set",
-			arg:     &http.Response{},
-			want:    constants.RetryDelay,
+			name: "No Header set",
+			args: args{
+				resp:        &http.Response{},
+				currAttempt: 0,
+			},
+			want:    constants.StartingRetryDelay,
 			wantErr: false,
 		},
 		{
-			name:    "Header set but empty",
-			arg:     newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: ""}),
-			want:    constants.RetryDelay,
+			name: "Header set but empty",
+			args: args{
+				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: ""}),
+				currAttempt: 0,
+			},
+			want:    constants.StartingRetryDelay,
 			wantErr: false,
 		},
 		{
-			name:    "Header set but invalid",
-			arg:     newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "invalid"}),
-			want:    constants.RetryDelay,
+			name: "Header set but invalid",
+			args: args{
+				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "invalid"}),
+				currAttempt: 0,
+			},
+			want:    constants.StartingRetryDelay,
 			wantErr: true,
 		},
 		{
-			name:    "Header set to negative",
-			arg:     newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "-2"}),
+			name: "Header set to negative",
+			args: args{
+				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "-2"}),
+				currAttempt: 0,
+			},
 			want:    time.Duration(1/2) * time.Second,
 			wantErr: false,
 		},
+		{
+			name: "Backoff at attempt 1",
+			args: args{
+				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
+				currAttempt: 1,
+			},
+			want:    4 * time.Second,
+			wantErr: false,
+		},
+		{
+			name: "Backoff at attempt 2",
+			args: args{
+				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
+				currAttempt: 2,
+			},
+			want:    8 * time.Second,
+			wantErr: false,
+		},
+		{
+			name: "Backoff at attempt 3",
+			args: args{
+				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
+				currAttempt: 3,
+			},
+			want:    16 * time.Second,
+			wantErr: false,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getBackoffDelay(tt.arg)
+			got, err := getBackoffDelay(tt.args.resp, tt.args.currAttempt)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getBackoffDelay() error = %v, wantErr %v", err, tt.wantErr)
 				return
