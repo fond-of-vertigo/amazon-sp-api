@@ -2,12 +2,9 @@ package finances
 
 import (
 	"errors"
-	"net/http"
-	"time"
-
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
-	"golang.org/x/time/rate"
+	"net/http"
 )
 
 const pathPrefix = "/finances/v0"
@@ -24,20 +21,12 @@ type API interface {
 }
 
 type api struct {
-	HttpClient                            httpx.Client
-	RateLimitListFinancialEventGroups     *rate.Limiter
-	RateLimitListFinancialEventsByGroupID *rate.Limiter
-	RateLimitListFinancialEventsByOrderID *rate.Limiter
-	RateLimitListFinancialEvents          *rate.Limiter
+	HttpClient httpx.Client
 }
 
 func NewAPI(httpClient httpx.Client) API {
 	return &api{
-		HttpClient:                            httpClient,
-		RateLimitListFinancialEventGroups:     rate.NewLimiter(rate.Every(time.Millisecond*2100), 1),
-		RateLimitListFinancialEventsByGroupID: rate.NewLimiter(rate.Every(time.Millisecond*2100), 1),
-		RateLimitListFinancialEventsByOrderID: rate.NewLimiter(rate.Every(time.Millisecond*2100), 1),
-		RateLimitListFinancialEvents:          rate.NewLimiter(rate.Every(time.Millisecond*2100), 1),
+		HttpClient: httpClient,
 	}
 }
 
@@ -48,7 +37,6 @@ func (a *api) ListFinancialEventGroups(filter *ListFinancialEventGroupsFilter) (
 
 	return apis.NewCall[ListFinancialEventGroupsResponse](http.MethodGet, pathPrefix+"/financialEventGroups").
 		WithQueryParams(filter.GetQuery()).
-		WithRateLimiter(a.RateLimitListFinancialEventGroups).
 		Execute(a.HttpClient)
 }
 
@@ -59,7 +47,6 @@ func (a *api) ListFinancialEventsByGroupID(eventGroupID string, filter *ListFina
 
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/financialEventGroups/"+eventGroupID+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
-		WithRateLimiter(a.RateLimitListFinancialEventsByGroupID).
 		Execute(a.HttpClient)
 }
 
@@ -70,7 +57,6 @@ func (a *api) ListFinancialEventsByOrderID(orderID string, filter *ListFinancial
 
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
-		WithRateLimiter(a.RateLimitListFinancialEventsByOrderID).
 		Execute(a.HttpClient)
 }
 
@@ -81,6 +67,5 @@ func (a *api) ListFinancialEvents(filter *ListFinancialEventsFilter) (*apis.Call
 
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
-		WithRateLimiter(a.RateLimitListFinancialEvents).
 		Execute(a.HttpClient)
 }

@@ -5,9 +5,7 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"go/types"
-	"golang.org/x/time/rate"
 	"net/http"
-	"time"
 )
 
 const pathPrefix = "/feeds/2021-06-30"
@@ -31,24 +29,12 @@ type API interface {
 }
 
 type api struct {
-	HttpClient                  httpx.Client
-	RateLimitGetFeeds           *rate.Limiter
-	RateLimitCreateFeed         *rate.Limiter
-	RateLimitGetFeed            *rate.Limiter
-	RateLimitCancelFeed         *rate.Limiter
-	RateLimitCreateFeedDocument *rate.Limiter
-	RateLimitGetFeedDocument    *rate.Limiter
+	HttpClient httpx.Client
 }
 
 func NewAPI(httpClient httpx.Client) API {
 	return &api{
-		HttpClient:                  httpClient,
-		RateLimitGetFeeds:           rate.NewLimiter(rate.Every(22200*time.Microsecond), 10),
-		RateLimitCreateFeed:         rate.NewLimiter(rate.Every(8300*time.Microsecond), 15),
-		RateLimitGetFeed:            rate.NewLimiter(rate.Every(2*time.Second), 15),
-		RateLimitCancelFeed:         rate.NewLimiter(rate.Every(22200*time.Microsecond), 10),
-		RateLimitCreateFeedDocument: rate.NewLimiter(rate.Every(8300*time.Microsecond), 15),
-		RateLimitGetFeedDocument:    rate.NewLimiter(rate.Every(22200*time.Microsecond), 10),
+		HttpClient: httpClient,
 	}
 }
 
@@ -56,7 +42,6 @@ func (a *api) GetFeeds(filter *GetFeedsRequestFilter) (*apis.CallResponse[GetFee
 	return apis.NewCall[GetFeedsResponse](http.MethodGet, pathPrefix+"/feeds").
 		WithQueryParams(filter.GetQuery()).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(a.RateLimitGetFeeds).
 		Execute(a.HttpClient)
 }
 
@@ -69,21 +54,18 @@ func (a *api) CreateFeed(specification *CreateFeedSpecification) (*apis.CallResp
 	return apis.NewCall[CreateFeedResponse](http.MethodPost, pathPrefix+"/feeds").
 		WithBody(body).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(a.RateLimitCreateFeed).
 		Execute(a.HttpClient)
 }
 
 func (a *api) GetFeed(feedID string) (*apis.CallResponse[Feed], error) {
 	return apis.NewCall[Feed](http.MethodGet, pathPrefix+"/feeds/"+feedID).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(a.RateLimitGetFeed).
 		Execute(a.HttpClient)
 }
 
 func (a *api) CancelFeed(feedID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/feeds/"+feedID).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(a.RateLimitCancelFeed).
 		Execute(a.HttpClient)
 	return err
 }
@@ -97,13 +79,11 @@ func (a *api) CreateFeedDocument(specification *CreateFeedDocumentSpecification)
 	return apis.NewCall[CreateFeedDocumentResponse](http.MethodPost, pathPrefix+"/documents").
 		WithBody(body).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(a.RateLimitCreateFeedDocument).
 		Execute(a.HttpClient)
 }
 
 func (a *api) GetFeedDocument(feedDocumentID string) (*apis.CallResponse[FeedDocument], error) {
 	return apis.NewCall[FeedDocument](http.MethodGet, pathPrefix+"/documents/"+feedDocumentID).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(a.RateLimitGetFeedDocument).
 		Execute(a.HttpClient)
 }

@@ -12,6 +12,7 @@ type Endpoint string
 
 const (
 	AccessTokenHeader = "X-Amz-Access-Token"
+	RateLimitHeader   = "x-amzn-RateLimit-Limit"
 	ServiceExecuteAPI = "execute-api"
 )
 

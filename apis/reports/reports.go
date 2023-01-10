@@ -6,11 +6,9 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"go/types"
-	"golang.org/x/time/rate"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 const pathPrefix = "/reports/2021-06-30"
@@ -43,31 +41,12 @@ type API interface {
 }
 
 type api struct {
-	HttpClient                    httpx.Client
-	RateLimitGetReports           *rate.Limiter
-	RateLimitCreateReport         *rate.Limiter
-	RateLimitGetReport            *rate.Limiter
-	RateLimitCancelReport         *rate.Limiter
-	RateLimitGetReportSchedules   *rate.Limiter
-	RateLimitCreateReportSchedule *rate.Limiter
-	RateLimitGetReportSchedule    *rate.Limiter
-	RateLimitCancelReportSchedule *rate.Limiter
-	RateLimitGetReportDocument    *rate.Limiter
+	HttpClient httpx.Client
 }
 
 func NewAPI(httpClient httpx.Client) API {
-
 	return &api{
-		HttpClient:                    httpClient,
-		RateLimitGetReports:           rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitCreateReport:         rate.NewLimiter(rate.Every(time.Microsecond*16700), 15),
-		RateLimitGetReport:            rate.NewLimiter(rate.Every(time.Second*2), 15),
-		RateLimitCancelReport:         rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitGetReportSchedules:   rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitCreateReportSchedule: rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitGetReportSchedule:    rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitCancelReportSchedule: rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitGetReportDocument:    rate.NewLimiter(rate.Every(time.Microsecond*22200), 15),
+		HttpClient: httpClient,
 	}
 }
 
@@ -78,7 +57,6 @@ func (r *api) GetReports(filter *GetReportsFilter) (*apis.CallResponse[GetReport
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/reports").
 		WithQueryParams(filter.GetQuery()).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReports).
 		Execute(r.HttpClient)
 }
 
@@ -90,20 +68,17 @@ func (r *api) CreateReport(specification *CreateReportSpecification) (*apis.Call
 	return apis.NewCall[CreateReportResponse](http.MethodPost, pathPrefix+"/reports").
 		WithBody(body).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitCreateReport).
 		Execute(r.HttpClient)
 }
 
 func (r *api) GetReport(reportID string) (*apis.CallResponse[GetReportResponse], error) {
 	return apis.NewCall[GetReportResponse](http.MethodGet, pathPrefix+"/reports/"+reportID).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReport).
 		Execute(r.HttpClient)
 }
 
 func (r *api) CancelReport(reportID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/reports/"+reportID).
-		WithRateLimiter(r.RateLimitCancelReport).
 		Execute(r.HttpClient)
 	return err
 }
@@ -117,7 +92,6 @@ func (r *api) GetReportSchedules(reportTypes []string) (*apis.CallResponse[GetRe
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/schedules").
 		WithQueryParams(params).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReportSchedules).
 		Execute(r.HttpClient)
 }
 
@@ -129,20 +103,17 @@ func (r *api) CreateReportSchedule(specification *CreateReportScheduleSpecificat
 	return apis.NewCall[CreateReportScheduleResponse](http.MethodPost, pathPrefix+"/schedules").
 		WithBody(body).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitCreateReportSchedule).
 		Execute(r.HttpClient)
 }
 
 func (r *api) GetReportSchedule(reportScheduleID string) (*apis.CallResponse[GetReportScheduleResponse], error) {
 	return apis.NewCall[GetReportScheduleResponse](http.MethodGet, pathPrefix+"/schedules/"+reportScheduleID).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReportSchedule).
 		Execute(r.HttpClient)
 }
 
 func (r *api) CancelReportSchedule(reportScheduleID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/schedules/"+reportScheduleID).
-		WithRateLimiter(r.RateLimitCancelReportSchedule).
 		Execute(r.HttpClient)
 	return err
 }
@@ -151,6 +122,5 @@ func (r *api) GetReportDocument(reportDocumentID string, restrictedDataToken *st
 	return apis.NewCall[GetReportDocumentResponse](http.MethodGet, pathPrefix+"/documents/"+reportDocumentID).
 		WithRestrictedDataToken(restrictedDataToken).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReportDocument).
 		Execute(r.HttpClient)
 }
