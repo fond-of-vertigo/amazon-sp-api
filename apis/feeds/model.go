@@ -2,6 +2,7 @@ package feeds
 
 import (
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"net/url"
 	"strconv"
 	"strings"
@@ -15,7 +16,7 @@ type Feed struct {
 	// The feed type.
 	FeedType string `json:"feedType"`
 	// A list of identifiers for the marketplaces that the feed is applied to.
-	MarketplaceIds []string `json:"marketplaceIds,omitempty"`
+	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds,omitempty"`
 	// The date and time when the feed was created, in ISO 8601 date time format.
 	CreatedTime time.Time `json:"createdTime"`
 	// The processing status of the feed.
@@ -41,7 +42,7 @@ type CreateFeedSpecification struct {
 	// The feed type.
 	FeedType string `json:"feedType"`
 	// A list of identifiers for marketplaces that you want the feed to be applied to.
-	MarketplaceIds []string `json:"marketplaceIds"`
+	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds"`
 	// The document identifier returned by the createFeedDocument operation. Upload the feed document contents before
 	// calling the createFeed operation.
 	InputFeedDocumentId string `json:"inputFeedDocumentId"`
@@ -64,7 +65,7 @@ type GetFeedsRequestFilter struct {
 	// A list of marketplace identifiers used to filter feeds.
 	// The feeds returned will match at least one of the marketplaces that you specify.
 	// Maximum 10 marketplace identifiers. If longer the first 10 will be used.
-	MarketplaceIDs []string `json:"marketplaceIds,omitempty"`
+	MarketplaceIDs []constants.MarketplaceID `json:"marketplaceIds,omitempty"`
 	// The maximum number of feeds to return in a single call.
 	// Minimum 1. Maximum 100.
 	PageSize int `json:"pageSize,omitempty"`
@@ -88,7 +89,8 @@ func (f *GetFeedsRequestFilter) GetQuery() url.Values {
 		q.Set("feedTypes", feedTypes)
 	}
 
-	marketplaceIds := strings.Join(apis.FirstNElementsOfSlice[string](f.MarketplaceIDs, 10), ",")
+	topTenMarketplaceIDs := apis.FirstNElementsOfSlice[constants.MarketplaceID](f.MarketplaceIDs, 10)
+	marketplaceIds := apis.MapToCommaString[constants.MarketplaceID](topTenMarketplaceIDs)
 	if marketplaceIds != "" {
 		q.Set("marketplaceIds", marketplaceIds)
 	}
