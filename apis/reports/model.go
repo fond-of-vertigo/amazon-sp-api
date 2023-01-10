@@ -122,7 +122,7 @@ type GetReportsFilter struct {
 	//marketplaceIDs is a list of marketplace identifiers used to filter reports.
 	// The reports returned will match at least one of the marketplaces that you specify.
 	// min count 1, max count 10
-	marketplaceIDs []string
+	marketplaceIDs []constants.MarketplaceID
 	// pageSize is the maximum number of reports to return in a single call.
 	// min 1, max 100
 	pageSize int
@@ -143,7 +143,7 @@ func (f *GetReportsFilter) GetQuery() url.Values {
 	q := url.Values{}
 	q.Add("reportTypes", strings.Join(f.reportTypes, ","))
 	q.Add("processingStatuses", strings.Join(f.processingStatuses, ","))
-	q.Add("marketplaceIds", strings.Join(f.marketplaceIDs, ","))
+	q.Add("marketplaceIds", apis.MapToCommaString[constants.MarketplaceID](f.marketplaceIDs))
 	q.Add("pageSize", fmt.Sprint(f.pageSize))
 	q.Add("createdSince", f.createdSince.String())
 	q.Add("createdUntil", f.createdUntil.String())
