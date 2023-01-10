@@ -811,44 +811,30 @@ type GetOrdersFilter struct {
 func (f *GetOrdersFilter) GetQuery() url.Values {
 	q := url.Values{}
 
-	addToQueryIfSet(q, "CreatedAfter", f.CreateAfter.String())
-	addToQueryIfSet(q, "CreatedBefore", f.CreatedBefore.String())
-	addToQueryIfSet(q, "LastUpdatedAfter", f.LastUpdatedAfter.String())
-	addToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
-	addToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
-	addToQueryIfSet(q, "OrderStatuses", convertToCommaString[OrderStatus](f.OrderStatuses))
-	addToQueryIfSet(q, "MarketplaceIds", convertToCommaString[constants.MarketplaceID](f.MarketplaceIDs))
-	addToQueryIfSet(q, "FulfillmentChannels", convertToCommaString[FulfillmentChannel](f.FulfillmentChannels))
-	addToQueryIfSet(q, "PaymentMethods", convertToCommaString[PaymentMethod](f.PaymentMethods))
-	addToQueryIfSet(q, "BuyerEmail", f.BuyerEmail)
-	addToQueryIfSet(q, "SellerOrderId", f.SellerOrderID)
+	apis.AddToQueryIfSet(q, "CreatedAfter", f.CreateAfter.String())
+	apis.AddToQueryIfSet(q, "CreatedBefore", f.CreatedBefore.String())
+	apis.AddToQueryIfSet(q, "LastUpdatedAfter", f.LastUpdatedAfter.String())
+	apis.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
+	apis.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
+	apis.AddToQueryIfSet(q, "OrderStatuses", apis.MapToCommaString[OrderStatus](f.OrderStatuses))
+	apis.AddToQueryIfSet(q, "MarketplaceIds", apis.MapToCommaString[constants.MarketplaceID](f.MarketplaceIDs))
+	apis.AddToQueryIfSet(q, "FulfillmentChannels", apis.MapToCommaString[FulfillmentChannel](f.FulfillmentChannels))
+	apis.AddToQueryIfSet(q, "PaymentMethods", apis.MapToCommaString[PaymentMethod](f.PaymentMethods))
+	apis.AddToQueryIfSet(q, "BuyerEmail", f.BuyerEmail)
+	apis.AddToQueryIfSet(q, "SellerOrderId", f.SellerOrderID)
 	if f.MaxResultsPerPage < 1 || f.MaxResultsPerPage > 100 {
 		f.MaxResultsPerPage = 100
 	}
-	addToQueryIfSet(q, "MaxResultsPerPage", strconv.Itoa(f.MaxResultsPerPage))
-	addToQueryIfSet(q, "EasyShipShipmentStatuses", convertToCommaString[EasyShipShipmentStatus](f.EasyShipShipmentStatuses))
-	addToQueryIfSet(q, "ElectronicInvoiceStatuses", convertToCommaString[ElectronicInvoiceStatus](f.ElectronicInvoiceStatuses))
-	addToQueryIfSet(q, "NextToken", f.NextToken)
-	addToQueryIfSet(q, "AmazonOrderIds", strings.Join(f.AmazonOrderIDs, ","))
-	addToQueryIfSet(q, "ActualFulfillmentSupplySourceId", f.ActualFulfillmentSupplySourceID)
+	apis.AddToQueryIfSet(q, "MaxResultsPerPage", strconv.Itoa(f.MaxResultsPerPage))
+	apis.AddToQueryIfSet(q, "EasyShipShipmentStatuses", apis.MapToCommaString[EasyShipShipmentStatus](f.EasyShipShipmentStatuses))
+	apis.AddToQueryIfSet(q, "ElectronicInvoiceStatuses", apis.MapToCommaString[ElectronicInvoiceStatus](f.ElectronicInvoiceStatuses))
+	apis.AddToQueryIfSet(q, "NextToken", f.NextToken)
+	apis.AddToQueryIfSet(q, "AmazonOrderIds", strings.Join(f.AmazonOrderIDs, ","))
+	apis.AddToQueryIfSet(q, "ActualFulfillmentSupplySourceId", f.ActualFulfillmentSupplySourceID)
 	if f.IsISPU != nil {
-		addToQueryIfSet(q, "IsISPU", strconv.FormatBool(*f.IsISPU))
+		apis.AddToQueryIfSet(q, "IsISPU", strconv.FormatBool(*f.IsISPU))
 	}
-	addToQueryIfSet(q, "StoreChainStoreId", f.StoreChainStoreID)
+	apis.AddToQueryIfSet(q, "StoreChainStoreId", f.StoreChainStoreID)
 
 	return q
-}
-
-func addToQueryIfSet(q url.Values, key string, value string) {
-	if value != "" {
-		q.Add(key, value)
-	}
-}
-
-func convertToCommaString[t any](slice []t) string {
-	var result []string
-	for _, v := range slice {
-		result = append(result, fmt.Sprintf("%v", v))
-	}
-	return strings.Join(result, ",")
 }
