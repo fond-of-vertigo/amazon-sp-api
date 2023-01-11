@@ -3,13 +3,14 @@ package apis
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"io"
 	"net/http"
 	"net/url"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 )
 
 type dummyHttpClient struct {
@@ -226,6 +227,7 @@ func Test_call_Execute(t *testing.T) {
 		})
 	}
 }
+
 func diff(want any, got any) bool {
 	if want == nil && !reflect.ValueOf(want).IsNil() {
 		return true
@@ -236,6 +238,7 @@ func diff(want any, got any) bool {
 	}
 	return false
 }
+
 func mockResponse(callResp *CallResponse[dummyBody]) (*http.Response, error) {
 	if callResp.ErrorList != nil {
 		bodyBytes, err := getJSONBytes(callResp.ErrorList)
@@ -267,110 +270,30 @@ func getJSONBytes(obj any) ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func Test_getBackoffDelay(t *testing.T) {
+func Test_calcWaitTimeByRateLimit(t *testing.T) {
 	type args struct {
-		resp        *http.Response
-		currAttempt int
+		callsPer float32
+		duration time.Duration
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    time.Duration
-		wantErr bool
-	}{
-		{
-			name: "Simple",
-			args: args{
-				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
-				currAttempt: 0,
-			},
-			want:    2 * time.Second,
-			wantErr: false,
-		},
-		{
-			name: "No Header set",
-			args: args{
-				resp:        &http.Response{},
-				currAttempt: 0,
-			},
-			want:    constants.StartingRetryDelay,
-			wantErr: false,
-		},
-		{
-			name: "Header set but empty",
-			args: args{
-				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: ""}),
-				currAttempt: 0,
-			},
-			want:    constants.StartingRetryDelay,
-			wantErr: false,
-		},
-		{
-			name: "Header set but invalid",
-			args: args{
-				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "invalid"}),
-				currAttempt: 0,
-			},
-			want:    constants.StartingRetryDelay,
-			wantErr: true,
-		},
-		{
-			name: "Header set to negative",
-			args: args{
-				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "-2"}),
-				currAttempt: 0,
-			},
-			want:    time.Duration(1/2) * time.Second,
-			wantErr: false,
-		},
-		{
-			name: "Backoff at attempt 1",
-			args: args{
-				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
-				currAttempt: 1,
-			},
-			want:    4 * time.Second,
-			wantErr: false,
-		},
-		{
-			name: "Backoff at attempt 2",
-			args: args{
-				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
-				currAttempt: 2,
-			},
-			want:    8 * time.Second,
-			wantErr: false,
-		},
-		{
-			name: "Backoff at attempt 3",
-			args: args{
-				resp:        newMockResponseWithHeader(map[string]string{constants.RateLimitHeader: "0.5"}),
-				currAttempt: 3,
-			},
-			want:    16 * time.Second,
-			wantErr: false,
-		},
+		name string
+		args args
+		want time.Duration
+	}{{
+		name: "0.5 req per sec, wait 2 seconds",
+		args: args{0.5, time.Second},
+		want: 2 * time.Second,
+	}, {
+		name: "2 req per sec, wait 500ms",
+		args: args{2, time.Second},
+		want: 500 * time.Millisecond,
+	},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getBackoffDelay(tt.args.resp, tt.args.currAttempt)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getBackoffDelay() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("getBackoffDelay() got = %v, want %v", got, tt.want)
+			if got := calcWaitTimeByRateLimit(tt.args.callsPer, tt.args.duration); got != tt.want {
+				t.Errorf("calcWaitTimeByRateLimit() = %v, want %v", got, tt.want)
 			}
 		})
 	}
-}
-
-func newMockResponseWithHeader(headerMap map[string]string) *http.Response {
-	r := http.Response{}
-	r.Header = http.Header{}
-	for k, v := range headerMap {
-		r.Header.Set(k, v)
-	}
-	return &r
 }

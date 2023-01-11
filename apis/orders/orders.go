@@ -1,10 +1,12 @@
 package orders
 
 import (
-	"github.com/fond-of-vertigo/amazon-sp-api/apis"
-	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 )
 
 const pathPrefix = "/orders/v0"
@@ -32,5 +34,6 @@ func (a *api) GetOrderItems(orderID string, nextToken *string) (*apis.CallRespon
 	}
 	return apis.NewCall[GetOrderItemsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/orderItems").
 		WithQueryParams(params).
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }
