@@ -2,10 +2,12 @@ package feeds
 
 import (
 	"encoding/json"
-	"github.com/fond-of-vertigo/amazon-sp-api/apis"
-	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"go/types"
 	"net/http"
+	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 )
 
 const pathPrefix = "/feeds/2021-06-30"
@@ -42,6 +44,7 @@ func (a *api) GetFeeds(filter *GetFeedsRequestFilter) (*apis.CallResponse[GetFee
 	return apis.NewCall[GetFeedsResponse](http.MethodGet, pathPrefix+"/feeds").
 		WithQueryParams(filter.GetQuery()).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0222, time.Second).
 		Execute(a.HttpClient)
 }
 
@@ -54,18 +57,21 @@ func (a *api) CreateFeed(specification *CreateFeedSpecification) (*apis.CallResp
 	return apis.NewCall[CreateFeedResponse](http.MethodPost, pathPrefix+"/feeds").
 		WithBody(body).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0083, time.Second).
 		Execute(a.HttpClient)
 }
 
 func (a *api) GetFeed(feedID string) (*apis.CallResponse[Feed], error) {
 	return apis.NewCall[Feed](http.MethodGet, pathPrefix+"/feeds/"+feedID).
 		WithParseErrorListOnError(true).
+		WithRateLimit(2, time.Second).
 		Execute(a.HttpClient)
 }
 
 func (a *api) CancelFeed(feedID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/feeds/"+feedID).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0222, time.Second).
 		Execute(a.HttpClient)
 	return err
 }
@@ -79,11 +85,13 @@ func (a *api) CreateFeedDocument(specification *CreateFeedDocumentSpecification)
 	return apis.NewCall[CreateFeedDocumentResponse](http.MethodPost, pathPrefix+"/documents").
 		WithBody(body).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0083, time.Second).
 		Execute(a.HttpClient)
 }
 
 func (a *api) GetFeedDocument(feedDocumentID string) (*apis.CallResponse[FeedDocument], error) {
 	return apis.NewCall[FeedDocument](http.MethodGet, pathPrefix+"/documents/"+feedDocumentID).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0222, time.Second).
 		Execute(a.HttpClient)
 }

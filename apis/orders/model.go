@@ -3,11 +3,12 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fond-of-vertigo/amazon-sp-api/apis"
-	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 )
 
 type ResponsibleParty string
@@ -140,22 +141,22 @@ const (
 
 // AllowedEasyShipShipmentStatusEnumValues are all allowed values of EasyShipShipmentStatus enum
 var AllowedEasyShipShipmentStatusEnumValues = []EasyShipShipmentStatus{
-	"PendingSchedule",
-	"PendingPickUp",
-	"PendingDropOff",
-	"LabelCanceled",
-	"PickedUp",
-	"DroppedOff",
-	"AtOriginFC",
-	"AtDestinationFC",
-	"Delivered",
-	"RejectedByBuyer",
-	"Undeliverable",
-	"ReturningToSeller",
-	"ReturnedToSeller",
-	"Lost",
-	"OutForDelivery",
-	"Damaged",
+	EasyShipPendingSchedule,
+	EasyShipPendingPickUp,
+	EasyShipPendingDropOff,
+	EasyShipLabelCanceled,
+	EasyShipPickedUp,
+	EasyShipDroppedOff,
+	EasyShipAtOriginFc,
+	EasyShipAtDestinationFc,
+	EasyShipDelivered,
+	EasyShipRejectedByBuyer,
+	EasyShipUndeliverable,
+	EasyShipReturningToSeller,
+	EasyShipReturnedToSeller,
+	EasyShipLost,
+	EasyShipOutForDelivery,
+	EasyShipDamaged,
 }
 
 func (v *EasyShipShipmentStatus) UnmarshalJSON(src []byte) error {
@@ -189,11 +190,11 @@ const (
 
 // AllowedElectronicInvoiceStatusEnumValues are all allowed values of ElectronicInvoiceStatus enum
 var AllowedElectronicInvoiceStatusEnumValues = []ElectronicInvoiceStatus{
-	"NotRequired",
-	"NotFound",
-	"Processing",
-	"Errored",
-	"Accepted",
+	ElectronicInvoiceNotRequired,
+	ElectronicInvoiceNotFound,
+	ElectronicInvoiceProcessing,
+	ElectronicInvoiceErrored,
+	ElectronicInvoiceAccepted,
 }
 
 func (v *ElectronicInvoiceStatus) UnmarshalJSON(src []byte) error {
@@ -432,7 +433,7 @@ type OrderItem struct {
 	CODFee         *Money   `json:"CODFee,omitempty"`
 	CODFeeDiscount *Money   `json:"CODFeeDiscount,omitempty"`
 	// When true, the item is a gift.
-	IsGift *bool `json:"IsGift,omitempty"`
+	IsGift *string `json:"IsGift,omitempty"`
 	// The condition of the item as described by the seller.
 	ConditionNote *string `json:"ConditionNote,omitempty"`
 	// The condition of the item.  Possible values: New, Used, Collectible, Refurbished, Preorder, Club.
@@ -539,7 +540,7 @@ type PointsGrantedDetail struct {
 // ProductInfoDetail Product information on the number of items.
 type ProductInfoDetail struct {
 	// The total number of items that are included in the ASIN.
-	NumberOfItems *int32 `json:"NumberOfItems,omitempty"`
+	NumberOfItems *string `json:"NumberOfItems,omitempty"`
 }
 
 // RegulatedInformation The regulated information collected during purchase and used to verify the order.
@@ -594,9 +595,9 @@ const (
 
 // AllowedShipmentStatusEnumValues are all allowed values of ShipmentStatus enum
 var AllowedShipmentStatusEnumValues = []ShipmentStatus{
-	"ReadyForPickup",
-	"PickedUp",
-	"RefusedPickup",
+	ShipmentReadyForPickup,
+	ShipmentPickedUp,
+	ShipmentRefusedPickup,
 }
 
 func (v *ShipmentStatus) UnmarshalJSON(src []byte) error {
@@ -681,11 +682,11 @@ const (
 
 // AllowedVerificationStatusEnumValues are all allowed values of VerificationStatus enum
 var AllowedVerificationStatusEnumValues = []VerificationStatus{
-	"Pending",
-	"Approved",
-	"Rejected",
-	"Expired",
-	"Cancelled",
+	VerificationPending,
+	VerificationApproved,
+	VerificationRejected,
+	VerificationExpired,
+	VerificationCancelled,
 }
 
 func (v *VerificationStatus) UnmarshalJSON(src []byte) error {
@@ -815,19 +816,18 @@ func (f *GetOrdersFilter) GetQuery() url.Values {
 	apis.AddToQueryIfSet(q, "CreatedBefore", f.CreatedBefore.String())
 	apis.AddToQueryIfSet(q, "LastUpdatedAfter", f.LastUpdatedAfter.String())
 	apis.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
-	apis.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
-	apis.AddToQueryIfSet(q, "OrderStatuses", apis.MapToCommaString[OrderStatus](f.OrderStatuses))
-	apis.AddToQueryIfSet(q, "MarketplaceIds", apis.MapToCommaString[constants.MarketplaceID](f.MarketplaceIDs))
-	apis.AddToQueryIfSet(q, "FulfillmentChannels", apis.MapToCommaString[FulfillmentChannel](f.FulfillmentChannels))
-	apis.AddToQueryIfSet(q, "PaymentMethods", apis.MapToCommaString[PaymentMethod](f.PaymentMethods))
+	apis.AddToQueryIfSet(q, "OrderStatuses", apis.MapToCommaString(f.OrderStatuses))
+	apis.AddToQueryIfSet(q, "MarketplaceIds", apis.MapToCommaString(f.MarketplaceIDs))
+	apis.AddToQueryIfSet(q, "FulfillmentChannels", apis.MapToCommaString(f.FulfillmentChannels))
+	apis.AddToQueryIfSet(q, "PaymentMethods", apis.MapToCommaString(f.PaymentMethods))
 	apis.AddToQueryIfSet(q, "BuyerEmail", f.BuyerEmail)
 	apis.AddToQueryIfSet(q, "SellerOrderId", f.SellerOrderID)
 	if f.MaxResultsPerPage < 1 || f.MaxResultsPerPage > 100 {
 		f.MaxResultsPerPage = 100
 	}
 	apis.AddToQueryIfSet(q, "MaxResultsPerPage", strconv.Itoa(f.MaxResultsPerPage))
-	apis.AddToQueryIfSet(q, "EasyShipShipmentStatuses", apis.MapToCommaString[EasyShipShipmentStatus](f.EasyShipShipmentStatuses))
-	apis.AddToQueryIfSet(q, "ElectronicInvoiceStatuses", apis.MapToCommaString[ElectronicInvoiceStatus](f.ElectronicInvoiceStatuses))
+	apis.AddToQueryIfSet(q, "EasyShipShipmentStatuses", apis.MapToCommaString(f.EasyShipShipmentStatuses))
+	apis.AddToQueryIfSet(q, "ElectronicInvoiceStatuses", apis.MapToCommaString(f.ElectronicInvoiceStatuses))
 	apis.AddToQueryIfSet(q, "NextToken", f.NextToken)
 	apis.AddToQueryIfSet(q, "AmazonOrderIds", strings.Join(f.AmazonOrderIDs, ","))
 	apis.AddToQueryIfSet(q, "ActualFulfillmentSupplySourceId", f.ActualFulfillmentSupplySourceID)

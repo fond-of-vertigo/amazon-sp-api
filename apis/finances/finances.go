@@ -2,9 +2,11 @@ package finances
 
 import (
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
-	"net/http"
 )
 
 const pathPrefix = "/finances/v0"
@@ -37,6 +39,7 @@ func (a *api) ListFinancialEventGroups(filter *ListFinancialEventGroupsFilter) (
 
 	return apis.NewCall[ListFinancialEventGroupsResponse](http.MethodGet, pathPrefix+"/financialEventGroups").
 		WithQueryParams(filter.GetQuery()).
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }
 
@@ -47,6 +50,7 @@ func (a *api) ListFinancialEventsByGroupID(eventGroupID string, filter *ListFina
 
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/financialEventGroups/"+eventGroupID+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }
 
@@ -57,6 +61,7 @@ func (a *api) ListFinancialEventsByOrderID(orderID string, filter *ListFinancial
 
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }
 
@@ -67,5 +72,6 @@ func (a *api) ListFinancialEvents(filter *ListFinancialEventsFilter) (*apis.Call
 
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }

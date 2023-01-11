@@ -2,9 +2,11 @@ package tokens
 
 import (
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
-	"net/http"
 )
 
 const pathPrefix = "/tokens/2021-03-01"
@@ -31,5 +33,6 @@ func (t *api) CreateRestrictedDataTokenRequest(restrictedResources *CreateRestri
 	}
 	return apis.NewCall[CreateRestrictedDataTokenResponse](http.MethodPost, pathPrefix+"/restrictedDataToken").
 		WithBody(body).
+		WithRateLimit(1.0, time.Second).
 		Execute(t.HttpClient)
 }

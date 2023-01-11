@@ -5,10 +5,9 @@ import "time"
 // ExpiryDelta describes the puffer-time for a token update before it will expire.
 const ExpiryDelta = 1 * time.Minute
 
-// MaxRetryCount describes the maximum number of retries for a request.
-const MaxRetryCount = 10
+// MaxRetryCountOnTooManyRequestsError is the maximum retry if we get HTTP 429 error
+const MaxRetryCountOnTooManyRequestsError = 20
 
-// StartingRetryDelay describes the first delay between retries.
-// retries grow exponentially 2^attempts * StartingRetryDelay.
-// Where attempts starts internally at 0.
-const StartingRetryDelay = 1 * time.Second
+// DefaultWaitDurationOnTooManyRequestsError is the default wait time between two requests
+// on HTTP 429 error
+const DefaultWaitDurationOnTooManyRequestsError = 1 * time.Second

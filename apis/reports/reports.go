@@ -3,12 +3,14 @@ package reports
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fond-of-vertigo/amazon-sp-api/apis"
-	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"go/types"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 )
 
 const pathPrefix = "/reports/2021-06-30"
@@ -57,6 +59,7 @@ func (r *api) GetReports(filter *GetReportsFilter) (*apis.CallResponse[GetReport
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/reports").
 		WithQueryParams(filter.GetQuery()).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0222, time.Second).
 		Execute(r.HttpClient)
 }
 
@@ -68,17 +71,20 @@ func (r *api) CreateReport(specification *CreateReportSpecification) (*apis.Call
 	return apis.NewCall[CreateReportResponse](http.MethodPost, pathPrefix+"/reports").
 		WithBody(body).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0167, time.Second).
 		Execute(r.HttpClient)
 }
 
 func (r *api) GetReport(reportID string) (*apis.CallResponse[GetReportResponse], error) {
 	return apis.NewCall[GetReportResponse](http.MethodGet, pathPrefix+"/reports/"+reportID).
 		WithParseErrorListOnError(true).
+		WithRateLimit(2.0, time.Second).
 		Execute(r.HttpClient)
 }
 
 func (r *api) CancelReport(reportID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/reports/"+reportID).
+		WithRateLimit(0.0222, time.Second).
 		Execute(r.HttpClient)
 	return err
 }
@@ -92,6 +98,7 @@ func (r *api) GetReportSchedules(reportTypes []string) (*apis.CallResponse[GetRe
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/schedules").
 		WithQueryParams(params).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0222, time.Second).
 		Execute(r.HttpClient)
 }
 
@@ -103,17 +110,20 @@ func (r *api) CreateReportSchedule(specification *CreateReportScheduleSpecificat
 	return apis.NewCall[CreateReportScheduleResponse](http.MethodPost, pathPrefix+"/schedules").
 		WithBody(body).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0222, time.Second).
 		Execute(r.HttpClient)
 }
 
 func (r *api) GetReportSchedule(reportScheduleID string) (*apis.CallResponse[GetReportScheduleResponse], error) {
 	return apis.NewCall[GetReportScheduleResponse](http.MethodGet, pathPrefix+"/schedules/"+reportScheduleID).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0222, time.Second).
 		Execute(r.HttpClient)
 }
 
 func (r *api) CancelReportSchedule(reportScheduleID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/schedules/"+reportScheduleID).
+		WithRateLimit(0.0222, time.Second).
 		Execute(r.HttpClient)
 	return err
 }
@@ -122,5 +132,6 @@ func (r *api) GetReportDocument(reportDocumentID string, restrictedDataToken *st
 	return apis.NewCall[GetReportDocumentResponse](http.MethodGet, pathPrefix+"/documents/"+reportDocumentID).
 		WithRestrictedDataToken(restrictedDataToken).
 		WithParseErrorListOnError(true).
+		WithRateLimit(0.0167, time.Second).
 		Execute(r.HttpClient)
 }
