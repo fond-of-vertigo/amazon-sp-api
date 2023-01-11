@@ -22,7 +22,7 @@ go get -u https://github.com/fond-of-vertigo/amazon-sp-api
 - [ ] Merchant Fulfillment
 - [ ] Messaging
 - [ ] Notifications
-- [x] [Orders (partly)](https://developer-docs.amazon.com/sp-api/docs/orders-api-v0-reference)
+- [x] [Orders](https://developer-docs.amazon.com/sp-api/docs/orders-api-v0-reference)
 - [ ] Product Fees
 - [ ] Product Pricing
 - [x] [Reports](https://developer-docs.amazon.com/sp-api/docs/reports-api-v2021-06-30-reference)
