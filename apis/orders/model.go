@@ -816,7 +816,6 @@ func (f *GetOrdersFilter) GetQuery() url.Values {
 	apis.AddToQueryIfSet(q, "CreatedBefore", f.CreatedBefore.String())
 	apis.AddToQueryIfSet(q, "LastUpdatedAfter", f.LastUpdatedAfter.String())
 	apis.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
-	apis.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
 	apis.AddToQueryIfSet(q, "OrderStatuses", apis.MapToCommaString[OrderStatus](f.OrderStatuses))
 	apis.AddToQueryIfSet(q, "MarketplaceIds", apis.MapToCommaString[constants.MarketplaceID](f.MarketplaceIDs))
 	apis.AddToQueryIfSet(q, "FulfillmentChannels", apis.MapToCommaString[FulfillmentChannel](f.FulfillmentChannels))
