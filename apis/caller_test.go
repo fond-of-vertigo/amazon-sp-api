@@ -39,10 +39,8 @@ func Test_call_Execute(t *testing.T) {
 		endpoint            constants.Endpoint
 		restrictedDataToken string
 		url                 string
-		call                call[any]
 		queryParams         url.Values
 		reqBodyObject       any
-		parseErrList        bool
 	}
 	type want struct {
 		url  string
@@ -200,7 +198,7 @@ func Test_call_Execute(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if bytes.Compare(gotReqBodyBytes, reqBodyBytes) != 0 {
+			if !bytes.Equal(gotReqBodyBytes, reqBodyBytes) {
 				t.Errorf("Execute(): request body different.")
 				return
 			}
