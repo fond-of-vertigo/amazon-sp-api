@@ -1,6 +1,7 @@
 package sp_api
 
 import (
+	"github.com/fond-of-vertigo/amazon-sp-api/apis/feeds"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/finances"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/orders"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/reports"
@@ -26,6 +27,7 @@ type Config struct {
 type Client struct {
 	quitSignal  chan bool
 	FinancesAPI finances.API
+	FeedsAPI    feeds.API
 	OrdersAPI   orders.API
 	ReportsAPI  reports.API
 	TokenAPI    tokens.API
@@ -66,6 +68,7 @@ func NewClient(config Config) (*Client, error) {
 	return &Client{
 		quitSignal:  quitSignal,
 		FinancesAPI: finances.NewAPI(httpClient),
+		FeedsAPI:    feeds.NewAPI(httpClient),
 		OrdersAPI:   orders.NewAPI(httpClient),
 		ReportsAPI:  reports.NewAPI(httpClient),
 		TokenAPI:    tokens.NewAPI(httpClient),
