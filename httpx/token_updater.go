@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fond-of-vertigo/amazon-sp-api/constants"
-	"github.com/fond-of-vertigo/logger"
 	"io"
 	"net/http"
 	"sync/atomic"
 	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/fond-of-vertigo/logger"
 )
 
 type TokenUpdaterConfig struct {

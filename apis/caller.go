@@ -5,10 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
@@ -26,30 +24,39 @@ type Call[responseType any] interface {
 	// WithRestrictedDataToken is optional and can be passed to replace the existing accessToken
 	WithRestrictedDataToken(*string) Call[responseType]
 	WithParseErrorListOnError(bool) Call[responseType]
+	WithRateLimit(callsPer float32, duration time.Duration) Call[responseType]
 	// Execute will return response object on success
 	Execute(httpClient httpx.Client) (*CallResponse[responseType], error)
 }
 
 func NewCall[responseType any](method string, url string) Call[responseType] {
 	return &call[responseType]{
-		Method: method,
-		URL:    url,
+		Method:                  method,
+		URL:                     url,
+		WaitDurationOnRateLimit: constants.DefaultWaitDurationOnTooManyRequestsError,
 	}
 }
 
 type call[responseType any] struct {
-	Method                string
-	URL                   string
-	QueryParams           url.Values
-	Body                  []byte
-	RestrictedDataToken   *string
-	ParseErrorListOnError bool
+	Method                  string
+	URL                     string
+	QueryParams             url.Values
+	Body                    []byte
+	RestrictedDataToken     *string
+	ParseErrorListOnError   bool
+	WaitDurationOnRateLimit time.Duration
 }
+
+// sleeper func as type for mocking
+type sleeper func(d time.Duration)
+
+var sleepFunc sleeper = time.Sleep
 
 func (a *call[responseType]) WithQueryParams(queryParams url.Values) Call[responseType] {
 	a.QueryParams = queryParams
 	return a
 }
+
 func (a *call[responseType]) WithBody(body []byte) Call[responseType] {
 	a.Body = body
 	return a
@@ -62,6 +69,11 @@ func (a *call[responseType]) WithRestrictedDataToken(token *string) Call[respons
 
 func (a *call[responseType]) WithParseErrorListOnError(parseErrList bool) Call[responseType] {
 	a.ParseErrorListOnError = parseErrList
+	return a
+}
+
+func (a *call[responseType]) WithRateLimit(callsPer float32, duration time.Duration) Call[responseType] {
+	a.WaitDurationOnRateLimit = calcWaitTimeByRateLimit(callsPer, duration)
 	return a
 }
 
@@ -91,8 +103,7 @@ func (a *call[responseType]) Execute(httpClient httpx.Client) (*CallResponse[res
 }
 
 func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, error) {
-	attempts := 0
-	for {
+	for attempts := 0; attempts < constants.MaxRetryCountOnTooManyRequestsError; attempts++ {
 		req, err := a.createNewRequest(httpClient.GetEndpoint())
 		if err != nil {
 			return nil, err
@@ -104,44 +115,14 @@ func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, e
 		}
 
 		if resp.StatusCode == http.StatusTooManyRequests {
-			if err := waitForRetry(resp, attempts); err != nil {
-				return resp, err
-			}
-			attempts++
-			if attempts >= constants.MaxRetryCount {
-				return nil, fmt.Errorf("max retry count of %d reached", constants.MaxRetryCount)
-			}
+			sleepFunc(a.WaitDurationOnRateLimit)
 			continue
 		}
+
 		return resp, err
 	}
-}
 
-func waitForRetry(resp *http.Response, attempt int) error {
-	backOffTime, err := getBackoffDelay(resp, attempt)
-	if err != nil {
-		return err
-	}
-
-	time.Sleep(backOffTime)
-	return nil
-}
-
-func getBackoffDelay(resp *http.Response, attempt int) (time.Duration, error) {
-	exponentialBackoff := time.Duration(math.Pow(2, float64(attempt)))
-
-	backOffTimeHeader := resp.Header.Get(constants.RateLimitHeader)
-	if backOffTimeHeader == "" {
-		return constants.StartingRetryDelay * exponentialBackoff, nil
-	}
-
-	reqPerSecond, err := strconv.ParseFloat(backOffTimeHeader, 64)
-	if err != nil {
-		return constants.StartingRetryDelay * exponentialBackoff, fmt.Errorf("error parsing backoff delay: %w", err)
-	}
-
-	backOffTime := time.Duration(math.Abs(1/reqPerSecond)) * time.Second * exponentialBackoff
-	return backOffTime, nil
+	return nil, fmt.Errorf("max retry count of %d reached", constants.MaxRetryCountOnTooManyRequestsError)
 }
 
 func (a *call[responseType]) createNewRequest(endpoint constants.Endpoint) (*http.Request, error) {
@@ -192,4 +173,8 @@ func unmarshalBody(resp *http.Response, into any) error {
 		return err
 	}
 	return json.Unmarshal(bodyBytes, into)
+}
+
+func calcWaitTimeByRateLimit(callsPer float32, duration time.Duration) time.Duration {
+	return time.Duration(float32(duration) / callsPer)
 }

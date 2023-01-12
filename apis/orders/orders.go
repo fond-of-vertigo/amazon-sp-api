@@ -3,10 +3,12 @@ package orders
 import (
 	"encoding/json"
 	"errors"
-	"github.com/fond-of-vertigo/amazon-sp-api/apis"
-	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 )
 
 const pathPrefix = "/orders/v0"
@@ -55,21 +57,25 @@ func (a *api) GetOrders(filter *GetOrdersFilter) (*apis.CallResponse[GetOrdersRe
 
 	return apis.NewCall[GetOrdersResponse](http.MethodGet, pathPrefix+"/orders").
 		WithQueryParams(filter.GetQuery()).
+		WithRateLimit(0.0167, time.Second).
 		Execute(a.HttpClient)
 }
 
 func (a *api) GetOrder(orderID string) (*apis.CallResponse[GetOrderResponse], error) {
 	return apis.NewCall[GetOrderResponse](http.MethodGet, pathPrefix+"/orders/"+orderID).
+		WithRateLimit(0.0167, time.Second).
 		Execute(a.HttpClient)
 }
 
 func (a *api) GetOrderBuyerInfo(orderID string) (*apis.CallResponse[GetOrderBuyerInfoResponse], error) {
 	return apis.NewCall[GetOrderBuyerInfoResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/buyerInfo").
+		WithRateLimit(0.0167, time.Second).
 		Execute(a.HttpClient)
 }
 
 func (a *api) GetOrderAddress(orderID string) (*apis.CallResponse[GetOrderAddressResponse], error) {
 	return apis.NewCall[GetOrderAddressResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/address").
+		WithRateLimit(0.0167, time.Second).
 		Execute(a.HttpClient)
 }
 
@@ -81,6 +87,7 @@ func (a *api) GetOrderItems(orderID string, nextToken *string) (*apis.CallRespon
 
 	return apis.NewCall[GetOrderItemsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/orderItems").
 		WithQueryParams(params).
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }
 
@@ -92,6 +99,7 @@ func (a *api) GetOrderItemsBuyerInfo(orderID string, nextToken *string) (*apis.C
 
 	return apis.NewCall[GetOrderItemsBuyerInfoResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/orderItems/buyerInfo").
 		WithQueryParams(params).
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }
 
@@ -103,11 +111,13 @@ func (a *api) UpdateShipmentStatus(orderID string, payload *UpdateShipmentStatus
 
 	return apis.NewCall[UpdateShipmentStatusErrorResponse](http.MethodPost, pathPrefix+"/orders/"+orderID+"/shipment").
 		WithBody(body).
+		WithRateLimit(5, time.Second).
 		Execute(a.HttpClient)
 }
 
 func (a *api) GetOrderRegulatedInfo(orderID string) (*apis.CallResponse[GetOrderRegulatedInfoResponse], error) {
 	return apis.NewCall[GetOrderRegulatedInfoResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/regulatedInfo").
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }
 
@@ -119,5 +129,6 @@ func (a *api) UpdateVerificationStatus(orderID string, payload *UpdateVerificati
 
 	return apis.NewCall[UpdateVerificationStatusErrorResponse](http.MethodPatch, pathPrefix+"/orders/"+orderID+"/regulatedInfo").
 		WithBody(body).
+		WithRateLimit(0.5, time.Second).
 		Execute(a.HttpClient)
 }
