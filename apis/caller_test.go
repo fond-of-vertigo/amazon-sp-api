@@ -32,6 +32,8 @@ func (r *dummyHttpClient) Do(req *http.Request) (*http.Response, error) {
 func (r *dummyHttpClient) GetEndpoint() constants.Endpoint {
 	return r.endpoint
 }
+func (r *dummyHttpClient) Close() {
+}
 
 func Test_call_Execute(t *testing.T) {
 	type args struct {

@@ -2,9 +2,10 @@ package httpx
 
 import (
 	"bytes"
-	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"net/http"
 	"testing"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 )
 
 type mockTokenUpdater struct {
@@ -17,6 +18,8 @@ func (m *mockTokenUpdater) GetAccessToken() string {
 func (m *mockTokenUpdater) RunInBackground() error {
 	return nil
 }
+func (m *mockTokenUpdater) Stop() {
+}
 
 func Test_httpClient_addAccessToken(t *testing.T) {
 	reqWithRDT, _ := http.NewRequest(http.MethodGet, "example.com", bytes.NewBufferString("example"))
@@ -25,7 +28,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 
 	type fields struct {
 		HttpClient   *http.Client
-		TokenUpdater TokenUpdater
+		TokenUpdater tokenUpdater
 	}
 	tests := []struct {
 		name            string
@@ -56,7 +59,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			h := &client{
 				HttpClient:   tt.fields.HttpClient,
-				TokenUpdater: tt.fields.TokenUpdater,
+				tokenUpdater: tt.fields.TokenUpdater,
 			}
 			h.addAccessTokenToHeader(tt.request)
 			if tt.request.Header.Get(constants.AccessTokenHeader) != tt.wantAccessToken {
