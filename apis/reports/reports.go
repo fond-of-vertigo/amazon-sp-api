@@ -53,8 +53,8 @@ func NewAPI(httpClient httpx.Client) API {
 }
 
 func (r *api) GetReports(filter *GetReportsFilter) (*apis.CallResponse[GetReportsResponse], error) {
-	if filter.pageSize < 1 {
-		filter.pageSize = 10
+	if filter.PageSize < 1 {
+		filter.PageSize = 10
 	}
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/reports").
 		WithQueryParams(filter.GetQuery()).

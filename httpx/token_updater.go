@@ -13,28 +13,30 @@ import (
 	"github.com/fond-of-vertigo/logger"
 )
 
+const tokenURL = "https://api.amazon.com/auth/o2/token"
+
 type TokenUpdaterConfig struct {
 	RefreshToken string
 	ClientID     string
 	ClientSecret string
 	Logger       logger.Logger
-	QuitSignal   chan bool
 }
 
-type TokenUpdater interface {
+type tokenUpdater interface {
 	GetAccessToken() string
 	RunInBackground() error
+	Stop()
 }
 
-type tokenUpdater struct {
-	AccessToken     *atomic.Value
-	ExpireTimestamp *atomic.Int64
-	RefreshToken    string
-	ClientID        string
-	ClientSecret    string
-	Log             logger.Logger
-	QuitSignal      chan bool
+type tokenUpdaterData struct {
+	timerPtr     atomic.Pointer[time.Timer]
+	accessToken  atomic.Pointer[string]
+	RefreshToken string
+	ClientID     string
+	ClientSecret string
+	Log          logger.Logger
 }
+
 type AccessTokenResponse struct {
 	AccessToken      string `json:"access_token"`
 	RefreshToken     string `json:"refresh_token"`
@@ -44,53 +46,36 @@ type AccessTokenResponse struct {
 	ErrorDescription string `json:"error_description"`
 }
 
-func NewTokenUpdater(config TokenUpdaterConfig) TokenUpdater {
-	t := tokenUpdater{
+func makeTokenUpdater(config TokenUpdaterConfig) tokenUpdater {
+	return &tokenUpdaterData{
 		RefreshToken: config.RefreshToken,
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
 		Log:          config.Logger,
-		QuitSignal:   config.QuitSignal,
 	}
-	return &t
 }
 
-func (t *tokenUpdater) RunInBackground() error {
-	t.ExpireTimestamp = &atomic.Int64{}
-	t.AccessToken = &atomic.Value{}
+func (t *tokenUpdaterData) RunInBackground() error {
 	t.Log.Debugf("Fetching first access-tokenAPI")
-	if err := t.fetchNewToken(); err != nil {
-		return err
-	}
-
-	go t.checkAccessToken()
-	return nil
+	return t.fetchNewToken()
 }
 
-func (t *tokenUpdater) checkAccessToken() {
-	for {
-		select {
-		case <-t.QuitSignal:
-			t.Log.Infof("Received signal to stop access-tokenAPI updates.")
-			return
-		default:
-			secondsToWait := secondsUntilExpired(t.ExpireTimestamp.Load())
-			if secondsToWait <= int64(constants.ExpiryDelta.Seconds()) {
-				if err := t.fetchNewToken(); err != nil {
-					t.Log.Errorf(err.Error())
-				}
-			} else {
-				time.Sleep(time.Duration(secondsToWait-int64(constants.ExpiryDelta.Seconds())) * time.Second)
-			}
-		}
+func (t *tokenUpdaterData) Stop() {
+	timer := t.timerPtr.Load()
+	if timer != nil {
+		timer.Stop()
 	}
 }
 
-func (t *tokenUpdater) GetAccessToken() string {
-	return fmt.Sprintf("%v", t.AccessToken.Load())
+func (t *tokenUpdaterData) GetAccessToken() string {
+	token := t.accessToken.Load()
+	if token == nil {
+		return ""
+	}
+	return *token
 }
 
-func (t *tokenUpdater) fetchNewToken() error {
+func (t *tokenUpdaterData) fetchNewToken() error {
 	reqBody, _ := json.Marshal(map[string]string{
 		"grant_type":    "refresh_token",
 		"refresh_token": t.RefreshToken,
@@ -98,11 +83,7 @@ func (t *tokenUpdater) fetchNewToken() error {
 		"client_secret": t.ClientSecret,
 	})
 
-	resp, err := http.Post(
-		"https://api.amazon.com/auth/o2/token",
-		"application/json",
-		bytes.NewBuffer(reqBody))
-
+	resp, err := http.Post(tokenURL, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		return err
 	}
@@ -117,21 +98,24 @@ func (t *tokenUpdater) fetchNewToken() error {
 	if err != nil {
 		return err
 	}
-	parsedResp := &AccessTokenResponse{}
 
+	parsedResp := &AccessTokenResponse{}
 	if err = json.Unmarshal(respBodyBytes, parsedResp); err != nil {
 		return fmt.Errorf("RefreshToken response parse failed. Body: %s", string(respBodyBytes))
 	}
+
 	if parsedResp.AccessToken != "" {
-		t.AccessToken.Swap(parsedResp.AccessToken)
+		t.accessToken.Store(&parsedResp.AccessToken)
+		t.Log.Debugf("Successfully refreshed access token")
 
-		expireTimestamp := time.Now().UTC().Add(time.Duration(parsedResp.ExpiresIn) * time.Second)
-		t.ExpireTimestamp.Swap(expireTimestamp.Unix())
+		secondsToWait := parsedResp.ExpiresIn - int(constants.ExpiryDelta/time.Second)
+		durationToWait := time.Duration(secondsToWait) * time.Second
+		t.timerPtr.Store(time.AfterFunc(durationToWait, func() {
+			if err := t.fetchNewToken(); err != nil {
+				t.Log.Errorf(err.Error())
+			}
+		}))
 	}
-	return nil
-}
 
-func secondsUntilExpired(unixTimestamp int64) int64 {
-	currentTimestamp := time.Now().Unix()
-	return unixTimestamp - currentTimestamp
+	return nil
 }

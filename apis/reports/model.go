@@ -3,7 +3,6 @@ package reports
 import (
 	"fmt"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
@@ -117,38 +116,38 @@ type GetReportsFilter struct {
 	// (processingStatuses, marketplaceIDs, createdSince, createdUntil) and pageSize may also be provided.
 	// Either reportTypes or nextToken is required.
 	// Min count 1, max count 10
-	reportTypes []string
+	ReportTypes []Type
 	// processingStatuses is a list of processing statuses used to filter reports.
-	processingStatuses []string
+	ProcessingStatuses []constants.ProcessingStatus
 	//marketplaceIDs is a list of marketplace identifiers used to filter reports.
 	// The reports returned will match at least one of the marketplaces that you specify.
 	// min count 1, max count 10
-	marketplaceIDs []constants.MarketplaceID
+	MarketplaceIDs []constants.MarketplaceID
 	// pageSize is the maximum number of reports to return in a single call.
 	// min 1, max 100
-	pageSize int
+	PageSize int
 	// createdSince is the earliest report creation date and time for reports to include in the response, in ISO 8601 date time format.
 	// The default is 90 days ago. ReportsAPI are retained for a maximum of 90 days.
-	createdSince apis.JsonTimeISO8601
+	CreatedSince apis.JsonTimeISO8601
 	// createdUntil is the latest report creation date and time for reports to include in the response, in ISO 8601 date time format.
 	// The default is now.
-	createdUntil apis.JsonTimeISO8601
+	CreatedUntil apis.JsonTimeISO8601
 	// nextToken is a string token returned in the response to your previous request.
 	// nextToken is returned when the number of results exceeds the specified pageSize value.
 	//To get the next page of results, call the getReports operation and include this token as the only parameter.
 	// Specifying nextToken with any other parameters will cause the request to fail.
-	nextToken string
+	NextToken string
 }
 
 func (f *GetReportsFilter) GetQuery() url.Values {
 	q := url.Values{}
-	q.Add("reportTypes", strings.Join(f.reportTypes, ","))
-	q.Add("processingStatuses", strings.Join(f.processingStatuses, ","))
-	q.Add("marketplaceIds", apis.MapToCommaString(f.marketplaceIDs))
-	q.Add("pageSize", fmt.Sprint(f.pageSize))
-	q.Add("createdSince", f.createdSince.String())
-	q.Add("createdUntil", f.createdUntil.String())
-	q.Add("nextToken", f.nextToken)
+	q.Add("reportTypes", apis.MapToCommaString(f.ReportTypes))
+	q.Add("processingStatuses", apis.MapToCommaString(f.ProcessingStatuses))
+	q.Add("marketplaceIds", apis.MapToCommaString(f.MarketplaceIDs))
+	q.Add("pageSize", fmt.Sprint(f.PageSize))
+	q.Add("createdSince", f.CreatedSince.String())
+	q.Add("createdUntil", f.CreatedUntil.String())
+	q.Add("nextToken", f.NextToken)
 	return q
 }
 

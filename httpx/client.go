@@ -3,26 +3,28 @@ package httpx
 import (
 	"bytes"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/fond-of-vertigo/amazon-sp-api/constants"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/google/uuid"
 )
 
 type Client interface {
 	Do(*http.Request) (*http.Response, error)
 	GetEndpoint() constants.Endpoint
+	Close()
 }
 
 type ClientConfig struct {
 	HttpClient         *http.Client
-	TokenUpdater       TokenUpdater
+	TokenUpdaterConfig TokenUpdaterConfig
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
 	Region             constants.Region
@@ -32,12 +34,17 @@ type ClientConfig struct {
 
 func NewClient(config ClientConfig) (Client, error) {
 	c := &client{
-		HttpClient:   config.HttpClient,
-		TokenUpdater: config.TokenUpdater,
-		Region:       config.Region,
-		RoleArn:      config.RoleArn,
-		Endpoint:     config.Endpoint,
+		HttpClient: config.HttpClient,
+		Region:     config.Region,
+		RoleArn:    config.RoleArn,
+		Endpoint:   config.Endpoint,
 	}
+
+	c.tokenUpdater = makeTokenUpdater(config.TokenUpdaterConfig)
+	if err := c.tokenUpdater.RunInBackground(); err != nil {
+		return nil, err
+	}
+
 	var err error
 	if c.AWSSession, err = session.NewSession(
 		&aws.Config{Credentials: credentials.NewStaticCredentials(config.IAMUserAccessKeyID, config.IAMUserSecretKey, "")},
@@ -48,9 +55,9 @@ func NewClient(config ClientConfig) (Client, error) {
 }
 
 type client struct {
+	tokenUpdater      tokenUpdater
 	HttpClient        *http.Client
 	Endpoint          constants.Endpoint
-	TokenUpdater      TokenUpdater
 	Region            constants.Region
 	RoleArn           string
 	AWS4Signer        *v4.Signer
@@ -72,9 +79,13 @@ func (h *client) GetEndpoint() constants.Endpoint {
 	return h.Endpoint
 }
 
+func (h *client) Close() {
+	h.tokenUpdater.Stop()
+}
+
 func (h *client) addAccessTokenToHeader(req *http.Request) {
 	if req.Header.Get(constants.AccessTokenHeader) == "" {
-		req.Header.Add(constants.AccessTokenHeader, h.TokenUpdater.GetAccessToken())
+		req.Header.Add(constants.AccessTokenHeader, h.tokenUpdater.GetAccessToken())
 	}
 }
 
