@@ -2,6 +2,7 @@ package sp_api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/feeds"
 	"github.com/fond-of-vertigo/amazon-sp-api/apis/finances"
@@ -22,6 +23,7 @@ type Config struct {
 	Region             constants.Region
 	RoleArn            string
 	Endpoint           constants.Endpoint
+	HTTPClient         *http.Client
 	Log                logger.Logger
 }
 
@@ -41,7 +43,7 @@ func (s *Client) Close() {
 
 func NewClient(config Config) (*Client, error) {
 	clientConfig := httpx.ClientConfig{
-		HttpClient:         &http.Client{},
+		HTTPClient:         config.HTTPClient,
 		Endpoint:           config.Endpoint,
 		IAMUserAccessKeyID: config.IAMUserAccessKeyID,
 		IAMUserSecretKey:   config.IAMUserSecretKey,
@@ -53,6 +55,10 @@ func NewClient(config Config) (*Client, error) {
 			ClientSecret: config.ClientSecret,
 			Logger:       config.Log,
 		},
+	}
+
+	if clientConfig.HTTPClient == nil {
+		clientConfig.HTTPClient = newHTTPClient()
 	}
 
 	httpClient, err := httpx.NewClient(clientConfig)
@@ -68,4 +74,13 @@ func NewClient(config Config) (*Client, error) {
 		ReportsAPI:  reports.NewAPI(httpClient),
 		TokenAPI:    tokens.NewAPI(httpClient),
 	}, nil
+}
+
+func newHTTPClient() *http.Client {
+	return &http.Client{
+		Timeout: time.Minute * 10,
+		Transport: &http.Transport{
+			TLSHandshakeTimeout: 5 * time.Second,
+		},
+	}
 }

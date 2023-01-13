@@ -20,6 +20,7 @@ type TokenUpdaterConfig struct {
 	RefreshToken string
 	ClientID     string
 	ClientSecret string
+	HTTPClient   *http.Client
 	Logger       logger.Logger
 }
 
@@ -32,6 +33,7 @@ type tokenUpdater interface {
 type tokenUpdaterData struct {
 	timerPtr     atomic.Pointer[time.Timer]
 	accessToken  atomic.Pointer[string]
+	client       *http.Client
 	RefreshToken string
 	ClientID     string
 	ClientSecret string
@@ -52,8 +54,9 @@ type parsedToken struct {
 	waitDuration time.Duration
 }
 
-func makeTokenUpdater(config TokenUpdaterConfig) tokenUpdater {
+func makeTokenUpdater(config TokenUpdaterConfig, client *http.Client) tokenUpdater {
 	return &tokenUpdaterData{
+		client:       client,
 		RefreshToken: config.RefreshToken,
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
@@ -114,7 +117,7 @@ func (t *tokenUpdaterData) fetchNewToken() (*parsedToken, error) {
 		"client_secret": t.ClientSecret,
 	})
 
-	resp, err := http.Post(tokenURL, "application/json", bytes.NewBuffer(reqBody))
+	resp, err := t.client.Post(tokenURL, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, err
 	}

@@ -23,7 +23,7 @@ type Client interface {
 }
 
 type ClientConfig struct {
-	HttpClient         *http.Client
+	HTTPClient         *http.Client
 	TokenUpdaterConfig TokenUpdaterConfig
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
@@ -34,21 +34,22 @@ type ClientConfig struct {
 
 func NewClient(config ClientConfig) (Client, error) {
 	c := &client{
-		HttpClient: config.HttpClient,
+		HttpClient: config.HTTPClient,
 		Region:     config.Region,
 		RoleArn:    config.RoleArn,
 		Endpoint:   config.Endpoint,
 	}
 
-	c.tokenUpdater = makeTokenUpdater(config.TokenUpdaterConfig)
+	c.tokenUpdater = makeTokenUpdater(config.TokenUpdaterConfig, config.HTTPClient)
 	if err := c.tokenUpdater.RunInBackground(); err != nil {
 		return nil, err
 	}
 
+	awsCfg := &aws.Config{}
+	awsCfg.Credentials = credentials.NewStaticCredentials(config.IAMUserAccessKeyID, config.IAMUserSecretKey, "")
 	var err error
-	if c.AWSSession, err = session.NewSession(
-		&aws.Config{Credentials: credentials.NewStaticCredentials(config.IAMUserAccessKeyID, config.IAMUserSecretKey, "")},
-	); err != nil {
+	c.AWSSession, err = session.NewSession(awsCfg)
+	if err != nil {
 		return nil, err
 	}
 	return c, nil
@@ -90,7 +91,6 @@ func (h *client) addAccessTokenToHeader(req *http.Request) {
 }
 
 func (h *client) signRequest(r *http.Request) error {
-
 	if h.AWS4Signer == nil ||
 		h.AWSStsCredentials == nil ||
 		h.AWS4Signer.Credentials.IsExpired() ||
@@ -112,9 +112,9 @@ func (h *client) signRequest(r *http.Request) error {
 	}
 
 	_, err := h.AWS4Signer.Sign(r, body, constants.ServiceExecuteAPI, string(h.Region), time.Now().UTC())
-
 	return err
 }
+
 func (h *client) RefreshCredentials() error {
 
 	roleSessionName := uuid.New().String()
