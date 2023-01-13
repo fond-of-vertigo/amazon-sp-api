@@ -13,7 +13,8 @@ import (
 	"github.com/fond-of-vertigo/logger"
 )
 
-const tokenURL = "https://api.amazon.com/auth/o2/token"
+const tokenURL string = "https://api.amazon.com/auth/o2/token"
+const retryOnErrorDuration time.Duration = 10 * time.Second
 
 type TokenUpdaterConfig struct {
 	RefreshToken string
@@ -37,13 +38,18 @@ type tokenUpdaterData struct {
 	Log          logger.Logger
 }
 
-type AccessTokenResponse struct {
+type accessTokenResponse struct {
 	AccessToken      string `json:"access_token"`
 	RefreshToken     string `json:"refresh_token"`
 	ExpiresIn        int    `json:"expires_in"`
 	TokenType        string `json:"token_type"`
 	Error            string `json:"error"`
 	ErrorDescription string `json:"error_description"`
+}
+
+type parsedToken struct {
+	token        string
+	waitDuration time.Duration
 }
 
 func makeTokenUpdater(config TokenUpdaterConfig) tokenUpdater {
@@ -55,15 +61,26 @@ func makeTokenUpdater(config TokenUpdaterConfig) tokenUpdater {
 	}
 }
 
+// RunInBackground fetches a new token and then starts the token updater.
+// It directly fetches a new token and starts the token updater only if
+// the first token call was successful.
 func (t *tokenUpdaterData) RunInBackground() error {
 	t.Log.Debugf("Fetching first access-tokenAPI")
-	return t.fetchNewToken()
+	resp, err := t.fetchNewToken()
+	if err != nil {
+		return err
+	}
+
+	t.accessToken.Store(&resp.token)
+	t.timerPtr.Store(time.AfterFunc(resp.waitDuration, t.endlesslyRefetchToken))
+	return nil
 }
 
 func (t *tokenUpdaterData) Stop() {
 	timer := t.timerPtr.Load()
 	if timer != nil {
 		timer.Stop()
+		t.timerPtr.Store(nil)
 	}
 }
 
@@ -75,7 +92,21 @@ func (t *tokenUpdaterData) GetAccessToken() string {
 	return *token
 }
 
-func (t *tokenUpdaterData) fetchNewToken() error {
+func (t *tokenUpdaterData) endlesslyRefetchToken() {
+	resp, err := t.fetchNewToken()
+	if err != nil {
+		t.Log.Errorf("fetchNewToken failed: %s", err)
+		t.Log.Infof("retrying to fetch token after %s", retryOnErrorDuration)
+		t.timerPtr.Store(time.AfterFunc(retryOnErrorDuration, t.endlesslyRefetchToken))
+		return
+	}
+
+	t.accessToken.Store(&resp.token)
+	t.timerPtr.Store(time.AfterFunc(resp.waitDuration, t.endlesslyRefetchToken))
+	t.Log.Debugf("sucessfully updated access token")
+}
+
+func (t *tokenUpdaterData) fetchNewToken() (*parsedToken, error) {
 	reqBody, _ := json.Marshal(map[string]string{
 		"grant_type":    "refresh_token",
 		"refresh_token": t.RefreshToken,
@@ -85,7 +116,7 @@ func (t *tokenUpdaterData) fetchNewToken() error {
 
 	resp, err := http.Post(tokenURL, "application/json", bytes.NewBuffer(reqBody))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer func(Body io.ReadCloser) {
@@ -96,26 +127,22 @@ func (t *tokenUpdaterData) fetchNewToken() error {
 
 	respBodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	parsedResp := &AccessTokenResponse{}
-	if err = json.Unmarshal(respBodyBytes, parsedResp); err != nil {
-		return fmt.Errorf("RefreshToken response parse failed. Body: %s", string(respBodyBytes))
+	tokenResp := &accessTokenResponse{}
+	if err = json.Unmarshal(respBodyBytes, tokenResp); err != nil {
+		return nil, fmt.Errorf("RefreshToken response parse failed. Body: %s", string(respBodyBytes))
 	}
 
-	if parsedResp.AccessToken != "" {
-		t.accessToken.Store(&parsedResp.AccessToken)
-		t.Log.Debugf("Successfully refreshed access token")
-
-		secondsToWait := parsedResp.ExpiresIn - int(constants.ExpiryDelta/time.Second)
+	if tokenResp.AccessToken != "" {
+		secondsToWait := tokenResp.ExpiresIn - int(constants.ExpiryDelta/time.Second)
 		durationToWait := time.Duration(secondsToWait) * time.Second
-		t.timerPtr.Store(time.AfterFunc(durationToWait, func() {
-			if err := t.fetchNewToken(); err != nil {
-				t.Log.Errorf(err.Error())
-			}
-		}))
+		return &parsedToken{
+			token:        tokenResp.AccessToken,
+			waitDuration: durationToWait,
+		}, nil
 	}
 
-	return nil
+	return nil, fmt.Errorf("received an empty token")
 }
