@@ -46,7 +46,7 @@ type AccessTokenResponse struct {
 	ErrorDescription string `json:"error_description"`
 }
 
-func makeTokenUpdater(config TokenUpdaterConfig) tokenUpdater {
+func newTokenUpdater(config TokenUpdaterConfig) tokenUpdater {
 	return &tokenUpdaterData{
 		RefreshToken: config.RefreshToken,
 		ClientID:     config.ClientID,

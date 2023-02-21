@@ -28,7 +28,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 
 	type fields struct {
 		HttpClient   *http.Client
-		TokenUpdater tokenUpdater
+		TokenUpdater *mockTokenUpdater
 	}
 	tests := []struct {
 		name            string
@@ -57,8 +57,8 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := &client{
-				HttpClient:   tt.fields.HttpClient,
+			h := &Client{
+				httpClient:   tt.fields.HttpClient,
 				tokenUpdater: tt.fields.TokenUpdater,
 			}
 			h.addAccessTokenToHeader(tt.request)

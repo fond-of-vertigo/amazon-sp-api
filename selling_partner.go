@@ -26,12 +26,12 @@ type Config struct {
 }
 
 type Client struct {
-	httpClient  httpx.Client
-	FinancesAPI finances.API
-	FeedsAPI    feeds.API
-	OrdersAPI   orders.API
-	ReportsAPI  reports.API
-	TokenAPI    tokens.API
+	httpClient  *httpx.Client
+	FinancesAPI *finances.API
+	FeedsAPI    *feeds.API
+	OrdersAPI   *orders.API
+	ReportsAPI  *reports.API
+	TokenAPI    *tokens.API
 }
 
 // Close stops the TokenUpdater thread

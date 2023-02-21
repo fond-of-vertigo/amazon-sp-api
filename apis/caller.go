@@ -10,34 +10,19 @@ import (
 	"time"
 
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
-	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 )
 
+type HttpClient interface {
+	Do(*http.Request) (*http.Response, error)
+	GetEndpoint() constants.Endpoint
+	Close()
+}
 type CallResponse[responseBodyType any] struct {
 	Status       int
 	ResponseBody *responseBodyType
 	ErrorList    *ErrorList
 }
-type Call[responseType any] interface {
-	WithQueryParams(url.Values) Call[responseType]
-	WithBody([]byte) Call[responseType]
-	// WithRestrictedDataToken is optional and can be passed to replace the existing accessToken
-	WithRestrictedDataToken(*string) Call[responseType]
-	WithParseErrorListOnError(bool) Call[responseType]
-	WithRateLimit(callsPer float32, duration time.Duration) Call[responseType]
-	// Execute will return response object on success
-	Execute(httpClient httpx.Client) (*CallResponse[responseType], error)
-}
-
-func NewCall[responseType any](method string, url string) Call[responseType] {
-	return &call[responseType]{
-		Method:                  method,
-		URL:                     url,
-		WaitDurationOnRateLimit: constants.DefaultWaitDurationOnTooManyRequestsError,
-	}
-}
-
-type call[responseType any] struct {
+type Call[responseType any] struct {
 	Method                  string
 	URL                     string
 	QueryParams             url.Values
@@ -47,37 +32,47 @@ type call[responseType any] struct {
 	WaitDurationOnRateLimit time.Duration
 }
 
+func NewCall[responseType any](method string, url string) *Call[responseType] {
+	return &Call[responseType]{
+		Method:                  method,
+		URL:                     url,
+		WaitDurationOnRateLimit: constants.DefaultWaitDurationOnTooManyRequestsError,
+	}
+}
+
 // sleeper func as type for mocking
 type sleeper func(d time.Duration)
 
 var sleepFunc sleeper = time.Sleep
 
-func (a *call[responseType]) WithQueryParams(queryParams url.Values) Call[responseType] {
+func (a *Call[responseType]) WithQueryParams(queryParams url.Values) *Call[responseType] {
 	a.QueryParams = queryParams
 	return a
 }
 
-func (a *call[responseType]) WithBody(body []byte) Call[responseType] {
+func (a *Call[responseType]) WithBody(body []byte) *Call[responseType] {
 	a.Body = body
 	return a
 }
 
-func (a *call[responseType]) WithRestrictedDataToken(token *string) Call[responseType] {
+// WithRestrictedDataToken is optional and can be passed to replace the existing accessToken
+func (a *Call[responseType]) WithRestrictedDataToken(token *string) *Call[responseType] {
 	a.RestrictedDataToken = token
 	return a
 }
 
-func (a *call[responseType]) WithParseErrorListOnError(parseErrList bool) Call[responseType] {
+func (a *Call[responseType]) WithParseErrorListOnError(parseErrList bool) *Call[responseType] {
 	a.ParseErrorListOnError = parseErrList
 	return a
 }
 
-func (a *call[responseType]) WithRateLimit(callsPer float32, duration time.Duration) Call[responseType] {
+func (a *Call[responseType]) WithRateLimit(callsPer float32, duration time.Duration) *Call[responseType] {
 	a.WaitDurationOnRateLimit = calcWaitTimeByRateLimit(callsPer, duration)
 	return a
 }
 
-func (a *call[responseType]) Execute(httpClient httpx.Client) (*CallResponse[responseType], error) {
+// Execute will return response object on success
+func (a *Call[responseType]) Execute(httpClient HttpClient) (*CallResponse[responseType], error) {
 	resp, err := a.execute(httpClient)
 	if err != nil {
 		return nil, err
@@ -102,7 +97,7 @@ func (a *call[responseType]) Execute(httpClient httpx.Client) (*CallResponse[res
 	return callResp, nil
 }
 
-func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, error) {
+func (a *Call[responseType]) execute(httpClient HttpClient) (*http.Response, error) {
 	for attempts := 0; attempts < constants.MaxRetryCountOnTooManyRequestsError; attempts++ {
 		req, err := a.createNewRequest(httpClient.GetEndpoint())
 		if err != nil {
@@ -122,10 +117,10 @@ func (a *call[responseType]) execute(httpClient httpx.Client) (*http.Response, e
 		return resp, err
 	}
 
-	return nil, fmt.Errorf("max retry count of %d reached", constants.MaxRetryCountOnTooManyRequestsError)
+	return nil, ErrMaxRetryCountReached
 }
 
-func (a *call[responseType]) createNewRequest(endpoint constants.Endpoint) (*http.Request, error) {
+func (a *Call[responseType]) createNewRequest(endpoint constants.Endpoint) (*http.Request, error) {
 	callURL, err := url.Parse(string(endpoint) + a.URL)
 	if err != nil {
 		return nil, err
