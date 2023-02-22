@@ -13,7 +13,7 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 )
 
-type dummyHttpClient struct {
+type dummyHTTPClient struct {
 	endpoint constants.Endpoint
 	req      *http.Request
 	resp     *http.Response
@@ -24,15 +24,15 @@ type dummyBody struct {
 	Number  float64
 }
 
-func (r *dummyHttpClient) Do(req *http.Request) (*http.Response, error) {
+func (r *dummyHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	r.req = req
 	r.resp.Request = req
 	return r.resp, r.errResp
 }
-func (r *dummyHttpClient) GetEndpoint() constants.Endpoint {
+func (r *dummyHTTPClient) GetEndpoint() constants.Endpoint {
 	return r.endpoint
 }
-func (r *dummyHttpClient) Close() {
+func (r *dummyHTTPClient) Close() {
 }
 
 func Test_call_Execute(t *testing.T) {
@@ -159,7 +159,7 @@ func Test_call_Execute(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			client := &dummyHttpClient{
+			client := &dummyHTTPClient{
 				endpoint: tt.args.endpoint,
 				resp:     mockResp,
 			}

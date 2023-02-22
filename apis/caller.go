@@ -12,7 +12,7 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 )
 
-type HttpClient interface {
+type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 	GetEndpoint() constants.Endpoint
 	Close()
@@ -72,7 +72,7 @@ func (a *Call[responseType]) WithRateLimit(callsPer float32, duration time.Durat
 }
 
 // Execute will return response object on success
-func (a *Call[responseType]) Execute(httpClient HttpClient) (*CallResponse[responseType], error) {
+func (a *Call[responseType]) Execute(httpClient HTTPClient) (*CallResponse[responseType], error) {
 	resp, err := a.execute(httpClient)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (a *Call[responseType]) Execute(httpClient HttpClient) (*CallResponse[respo
 	return callResp, nil
 }
 
-func (a *Call[responseType]) execute(httpClient HttpClient) (*http.Response, error) {
+func (a *Call[responseType]) execute(httpClient HTTPClient) (*http.Response, error) {
 	for attempts := 0; attempts < constants.MaxRetryCountOnTooManyRequestsError; attempts++ {
 		req, err := a.createNewRequest(httpClient.GetEndpoint())
 		if err != nil {

@@ -41,7 +41,7 @@ func (s *Client) Close() {
 
 func NewClient(config Config) (*Client, error) {
 	clientConfig := httpx.ClientConfig{
-		HttpClient:         &http.Client{},
+		HTTPClient:         &http.Client{},
 		Endpoint:           config.Endpoint,
 		IAMUserAccessKeyID: config.IAMUserAccessKeyID,
 		IAMUserSecretKey:   config.IAMUserSecretKey,

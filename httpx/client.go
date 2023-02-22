@@ -17,7 +17,7 @@ import (
 )
 
 type ClientConfig struct {
-	HttpClient         *http.Client
+	HTTPClient         *http.Client
 	TokenUpdaterConfig TokenUpdaterConfig
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
@@ -28,7 +28,7 @@ type ClientConfig struct {
 
 func NewClient(config ClientConfig) (*Client, error) {
 	c := &Client{
-		httpClient: config.HttpClient,
+		httpClient: config.HTTPClient,
 		region:     config.Region,
 		roleArn:    config.RoleArn,
 		endpoint:   config.Endpoint,
