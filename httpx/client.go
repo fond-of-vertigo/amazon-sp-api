@@ -16,14 +16,8 @@ import (
 	"github.com/google/uuid"
 )
 
-type Client interface {
-	Do(*http.Request) (*http.Response, error)
-	GetEndpoint() constants.Endpoint
-	Close()
-}
-
 type ClientConfig struct {
-	HttpClient         *http.Client
+	HTTPClient         *http.Client
 	TokenUpdaterConfig TokenUpdaterConfig
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
@@ -32,21 +26,21 @@ type ClientConfig struct {
 	Endpoint           constants.Endpoint
 }
 
-func NewClient(config ClientConfig) (Client, error) {
-	c := &client{
-		HttpClient: config.HttpClient,
-		Region:     config.Region,
-		RoleArn:    config.RoleArn,
-		Endpoint:   config.Endpoint,
+func NewClient(config ClientConfig) (*Client, error) {
+	c := &Client{
+		httpClient: config.HTTPClient,
+		region:     config.Region,
+		roleArn:    config.RoleArn,
+		endpoint:   config.Endpoint,
 	}
 
-	c.tokenUpdater = makeTokenUpdater(config.TokenUpdaterConfig)
+	c.tokenUpdater = newTokenUpdater(config.TokenUpdaterConfig)
 	if err := c.tokenUpdater.RunInBackground(); err != nil {
 		return nil, err
 	}
 
 	var err error
-	if c.AWSSession, err = session.NewSession(
+	if c.awsSession, err = session.NewSession(
 		&aws.Config{Credentials: credentials.NewStaticCredentials(config.IAMUserAccessKeyID, config.IAMUserSecretKey, "")},
 	); err != nil {
 		return nil, err
@@ -54,48 +48,48 @@ func NewClient(config ClientConfig) (Client, error) {
 	return c, nil
 }
 
-type client struct {
+type Client struct {
 	tokenUpdater      tokenUpdater
-	HttpClient        *http.Client
-	Endpoint          constants.Endpoint
-	Region            constants.Region
-	RoleArn           string
-	AWS4Signer        *v4.Signer
-	AWSStsCredentials *sts.Credentials
-	AWSSession        *session.Session
+	httpClient        *http.Client
+	endpoint          constants.Endpoint
+	region            constants.Region
+	roleArn           string
+	aws4Signer        *v4.Signer
+	awsStsCredentials *sts.Credentials
+	awsSession        *session.Session
 }
 
-func (h *client) Do(req *http.Request) (*http.Response, error) {
+func (h *Client) Do(req *http.Request) (*http.Response, error) {
 	h.addAccessTokenToHeader(req)
 
 	if err := h.signRequest(req); err != nil {
 		return nil, err
 	}
 
-	return h.HttpClient.Do(req)
+	return h.httpClient.Do(req)
 }
 
-func (h *client) GetEndpoint() constants.Endpoint {
-	return h.Endpoint
+func (h *Client) GetEndpoint() constants.Endpoint {
+	return h.endpoint
 }
 
-func (h *client) Close() {
+func (h *Client) Close() {
 	h.tokenUpdater.Stop()
 }
 
-func (h *client) addAccessTokenToHeader(req *http.Request) {
+func (h *Client) addAccessTokenToHeader(req *http.Request) {
 	if req.Header.Get(constants.AccessTokenHeader) == "" {
 		req.Header.Add(constants.AccessTokenHeader, h.tokenUpdater.GetAccessToken())
 	}
 }
 
-func (h *client) signRequest(r *http.Request) error {
+func (h *Client) signRequest(r *http.Request) error {
 
-	if h.AWS4Signer == nil ||
-		h.AWSStsCredentials == nil ||
-		h.AWS4Signer.Credentials.IsExpired() ||
-		h.AWSStsCredentials.Expiration.IsZero() ||
-		h.AWSStsCredentials.Expiration.Round(0).Add(-constants.ExpiryDelta).Before(time.Now().UTC()) {
+	if h.aws4Signer == nil ||
+		h.awsStsCredentials == nil ||
+		h.aws4Signer.Credentials.IsExpired() ||
+		h.awsStsCredentials.Expiration.IsZero() ||
+		h.awsStsCredentials.Expiration.Round(0).Add(-constants.ExpiryDelta).Before(time.Now().UTC()) {
 		if err := h.RefreshCredentials(); err != nil {
 			return fmt.Errorf("cannot refresh role credentials. Error: %w", err)
 		}
@@ -111,16 +105,16 @@ func (h *client) signRequest(r *http.Request) error {
 		body = bytes.NewReader(payload)
 	}
 
-	_, err := h.AWS4Signer.Sign(r, body, constants.ServiceExecuteAPI, string(h.Region), time.Now().UTC())
+	_, err := h.aws4Signer.Sign(r, body, constants.ServiceExecuteAPI, string(h.region), time.Now().UTC())
 
 	return err
 }
-func (h *client) RefreshCredentials() error {
+func (h *Client) RefreshCredentials() error {
 
 	roleSessionName := uuid.New().String()
 
-	role, err := sts.New(h.AWSSession).AssumeRole(&sts.AssumeRoleInput{
-		RoleArn:         aws.String(h.RoleArn),
+	role, err := sts.New(h.awsSession).AssumeRole(&sts.AssumeRoleInput{
+		RoleArn:         aws.String(h.roleArn),
 		RoleSessionName: aws.String(roleSessionName),
 	})
 
@@ -132,9 +126,9 @@ func (h *client) RefreshCredentials() error {
 		return fmt.Errorf("AssumeRole call failed in return")
 	}
 
-	h.AWSStsCredentials = role.Credentials
+	h.awsStsCredentials = role.Credentials
 
-	h.AWS4Signer = v4.NewSigner(credentials.NewStaticCredentials(
+	h.aws4Signer = v4.NewSigner(credentials.NewStaticCredentials(
 		*role.Credentials.AccessKeyId,
 		*role.Credentials.SecretAccessKey,
 		*role.Credentials.SessionToken),

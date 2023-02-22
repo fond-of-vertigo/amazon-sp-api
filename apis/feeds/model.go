@@ -10,6 +10,12 @@ import (
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 )
 
+type ProcessingStatus string
+
+func (s ProcessingStatus) IsDone() bool {
+	return s == "DONE"
+}
+
 // Feed contains detailed information about the feed.
 type Feed struct {
 	// The identifier for the feed. This identifier is unique only in combination with a seller ID.
@@ -21,7 +27,7 @@ type Feed struct {
 	// The date and time when the feed was created, in ISO 8601 date time format.
 	CreatedTime time.Time `json:"createdTime"`
 	// The processing status of the feed.
-	ProcessingStatus string `json:"processingStatus"`
+	ProcessingStatus ProcessingStatus `json:"processingStatus"`
 	// The date and time when feed processing started, in ISO 8601 date time format.
 	ProcessingStartTime *time.Time `json:"processingStartTime,omitempty"`
 	// The date and time when feed processing completed, in ISO 8601 date time format.

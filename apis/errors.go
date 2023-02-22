@@ -1,5 +1,14 @@
 package apis
 
+import (
+	"fmt"
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+)
+
+var (
+	ErrMaxRetryCountReached = fmt.Errorf("max retry count of %d reached", constants.MaxRetryCountOnTooManyRequestsError)
+)
+
 // Error response returned when the request is unsuccessful.
 type Error struct {
 	// An error code that identifies the type of error that occurred.
