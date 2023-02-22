@@ -12,9 +12,18 @@ import (
 
 type ProcessingStatus string
 
-func (s ProcessingStatus) IsDone() bool {
-	return s == "DONE"
-}
+const (
+	// ProcessingStatusCanceled The feed was cancelled before it started processing.
+	ProcessingStatusCanceled ProcessingStatus = "CANCELLED"
+	// ProcessingStatusDone The feed has completed processing. Examine the contents of the result document to determine if there were any errors during processing.
+	ProcessingStatusDone ProcessingStatus = "DONE"
+	// ProcessingStatusFatal The feed was aborted due to a fatal error. Some, none, or all of the operations within the feed may have completed successfully.
+	ProcessingStatusFatal ProcessingStatus = "FATAL"
+	// ProcessingStatusInProgress The feed is being processed.
+	ProcessingStatusInProgress ProcessingStatus = "IN_PROGRESS"
+	// ProcessingStatusInQueue The feed has not yet started processing. It may be waiting for another IN_PROGRESS feed.
+	ProcessingStatusInQueue ProcessingStatus = "IN_QUEUE"
+)
 
 // Feed contains detailed information about the feed.
 type Feed struct {
