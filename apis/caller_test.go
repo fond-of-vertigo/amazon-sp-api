@@ -146,8 +146,10 @@ func Test_call_Execute(t *testing.T) {
 					},
 				},
 			},
+			wantErr: true,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// given:
@@ -167,8 +169,12 @@ func Test_call_Execute(t *testing.T) {
 			// when:
 			call := NewCall[dummyBody](tt.args.method, tt.args.url).
 				WithQueryParams(tt.args.queryParams).
-				WithBody(reqBodyBytes).
-				WithParseErrorListOnError(tt.want.resp.ErrorList != nil)
+				WithBody(reqBodyBytes)
+
+			if tt.want.resp.ErrorList != nil {
+				call = call.WithParseErrorListOnError()
+			}
+
 			if tt.args.restrictedDataToken != "" {
 				call = call.WithRestrictedDataToken(&tt.args.restrictedDataToken)
 			}
@@ -256,6 +262,7 @@ func mockResponse(callResp *CallResponse[dummyBody]) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &http.Response{
 		Status:        "200 OK",
 		StatusCode:    http.StatusOK,
@@ -279,15 +286,16 @@ func Test_calcWaitTimeByRateLimit(t *testing.T) {
 		name string
 		args args
 		want time.Duration
-	}{{
-		name: "0.5 req per sec, wait 2 seconds",
-		args: args{0.5, time.Second},
-		want: 2 * time.Second,
-	}, {
-		name: "2 req per sec, wait 500ms",
-		args: args{2, time.Second},
-		want: 500 * time.Millisecond,
-	},
+	}{
+		{
+			name: "0.5 req per sec, wait 2 seconds",
+			args: args{0.5, time.Second},
+			want: 2 * time.Second,
+		}, {
+			name: "2 req per sec, wait 500ms",
+			args: args{2, time.Second},
+			want: 500 * time.Millisecond,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

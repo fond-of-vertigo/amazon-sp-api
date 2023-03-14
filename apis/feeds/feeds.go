@@ -26,7 +26,7 @@ func NewAPI(httpClient *httpx.Client) *API {
 func (a *API) GetFeeds(filter *GetFeedsRequestFilter) (*apis.CallResponse[GetFeedsResponse], error) {
 	return apis.NewCall[GetFeedsResponse](http.MethodGet, pathPrefix+"/feeds").
 		WithQueryParams(filter.GetQuery()).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0222, time.Second).
 		Execute(a.httpClient)
 }
@@ -40,7 +40,7 @@ func (a *API) CreateFeed(specification *CreateFeedSpecification) (*apis.CallResp
 
 	return apis.NewCall[CreateFeedResponse](http.MethodPost, pathPrefix+"/feeds").
 		WithBody(body).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0083, time.Second).
 		Execute(a.httpClient)
 }
@@ -48,7 +48,7 @@ func (a *API) CreateFeed(specification *CreateFeedSpecification) (*apis.CallResp
 // GetFeed returns feed details (including the resultDocumentId, if available) for the feed that you specify.
 func (a *API) GetFeed(feedID string) (*apis.CallResponse[Feed], error) {
 	return apis.NewCall[Feed](http.MethodGet, pathPrefix+"/feeds/"+feedID).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(2, time.Second).
 		Execute(a.httpClient)
 }
@@ -57,7 +57,7 @@ func (a *API) GetFeed(feedID string) (*apis.CallResponse[Feed], error) {
 // Cancelled feeds are returned in subsequent calls to the getFeed and getFeeds operations.
 func (a *API) CancelFeed(feedID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/feeds/"+feedID).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0222, time.Second).
 		Execute(a.httpClient)
 	return err
@@ -74,7 +74,7 @@ func (a *API) CreateFeedDocument(specification *CreateFeedDocumentSpecification)
 
 	return apis.NewCall[CreateFeedDocumentResponse](http.MethodPost, pathPrefix+"/documents").
 		WithBody(body).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0083, time.Second).
 		Execute(a.httpClient)
 }
@@ -82,7 +82,7 @@ func (a *API) CreateFeedDocument(specification *CreateFeedDocumentSpecification)
 // GetFeedDocument the information required for retrieving a feed document's contents.
 func (a *API) GetFeedDocument(feedDocumentID string) (*apis.CallResponse[FeedDocument], error) {
 	return apis.NewCall[FeedDocument](http.MethodGet, pathPrefix+"/documents/"+feedDocumentID).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(1.0, time.Minute). // documented value (2/sec) seems way too much (many http 429 errors)
 		Execute(a.httpClient)
 }

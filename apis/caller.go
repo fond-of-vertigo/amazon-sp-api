@@ -2,9 +2,8 @@ package apis
 
 import (
 	"bytes"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -61,8 +60,8 @@ func (a *Call[responseType]) WithRestrictedDataToken(token *string) *Call[respon
 	return a
 }
 
-func (a *Call[responseType]) WithParseErrorListOnError(parseErrList bool) *Call[responseType] {
-	a.ParseErrorListOnError = parseErrList
+func (a *Call[responseType]) WithParseErrorListOnError() *Call[responseType] {
+	a.ParseErrorListOnError = true
 	return a
 }
 
@@ -82,19 +81,26 @@ func (a *Call[responseType]) Execute(httpClient HTTPClient) (*CallResponse[respo
 		Status: resp.StatusCode,
 	}
 
-	if a.ParseErrorListOnError && !callResp.IsSuccess() {
-		if err = unmarshalBody(resp, &callResp.ErrorList); err != nil {
-			return nil, err
+	if callResp.IsSuccess() { // Response is OK
+		if resp.ContentLength > 0 {
+			if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
+				return nil, err
+			}
 		}
 		return callResp, nil
 	}
-	if resp.ContentLength > 0 {
-		if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
-			return nil, err
+
+	// Response is not OK
+	err = fmt.Errorf("request with URL=%v returned with non-OK statuscode=%d", a.URL, callResp.Status)
+	if a.ParseErrorListOnError { // ErrorList is activated, try to parse it
+		if parseErr := unmarshalBody(resp, &callResp.ErrorList); parseErr != nil {
+			return nil, errors.Join(err, parseErr)
 		}
+
+		return callResp, errors.Join(err, mapErrorListToError(callResp.ErrorList))
 	}
 
-	return callResp, nil
+	return callResp, err
 }
 
 func (a *Call[responseType]) execute(httpClient HTTPClient) (*http.Response, error) {
@@ -114,7 +120,7 @@ func (a *Call[responseType]) execute(httpClient HTTPClient) (*http.Response, err
 			continue
 		}
 
-		return resp, err
+		return resp, nil
 	}
 
 	return nil, ErrMaxRetryCountReached
@@ -157,17 +163,6 @@ func (r *CallResponse[any]) ErrorsAsString() string {
 		msg = fmt.Sprintf("%s\n%v", msg, r.ErrorList)
 	}
 	return msg
-}
-
-func unmarshalBody(resp *http.Response, into any) error {
-	if resp.ContentLength == 0 {
-		return nil
-	}
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bodyBytes, into)
 }
 
 func calcWaitTimeByRateLimit(callsPer float32, duration time.Duration) time.Duration {

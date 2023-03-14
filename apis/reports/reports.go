@@ -33,7 +33,7 @@ func (r *API) GetReports(filter *GetReportsFilter) (*apis.CallResponse[GetReport
 	}
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/reports").
 		WithQueryParams(filter.GetQuery()).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0222, time.Second).
 		Execute(r.httpClient)
 }
@@ -46,7 +46,7 @@ func (r *API) CreateReport(specification *CreateReportSpecification) (*apis.Call
 	}
 	return apis.NewCall[CreateReportResponse](http.MethodPost, pathPrefix+"/reports").
 		WithBody(body).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0167, time.Second).
 		Execute(r.httpClient)
 }
@@ -54,7 +54,7 @@ func (r *API) CreateReport(specification *CreateReportSpecification) (*apis.Call
 // GetReport returns report details (including the reportDocumentID, if available) for the report that you specify.
 func (r *API) GetReport(reportID string) (*apis.CallResponse[GetReportResponse], error) {
 	return apis.NewCall[GetReportResponse](http.MethodGet, pathPrefix+"/reports/"+reportID).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(2.0, time.Second).
 		Execute(r.httpClient)
 }
@@ -78,7 +78,7 @@ func (r *API) GetReportSchedules(reportTypes []string) (*apis.CallResponse[GetRe
 	params.Add("reportTypes", strings.Join(reportTypes, ","))
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/schedules").
 		WithQueryParams(params).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0222, time.Second).
 		Execute(r.httpClient)
 }
@@ -93,7 +93,7 @@ func (r *API) CreateReportSchedule(specification *CreateReportScheduleSpecificat
 	}
 	return apis.NewCall[CreateReportScheduleResponse](http.MethodPost, pathPrefix+"/schedules").
 		WithBody(body).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0222, time.Second).
 		Execute(r.httpClient)
 }
@@ -101,7 +101,7 @@ func (r *API) CreateReportSchedule(specification *CreateReportScheduleSpecificat
 // GetReportSchedule returns report schedule details for the report schedule that you specify.
 func (r *API) GetReportSchedule(reportScheduleID string) (*apis.CallResponse[GetReportScheduleResponse], error) {
 	return apis.NewCall[GetReportScheduleResponse](http.MethodGet, pathPrefix+"/schedules/"+reportScheduleID).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0222, time.Second).
 		Execute(r.httpClient)
 }
@@ -119,7 +119,7 @@ func (r *API) CancelReportSchedule(reportScheduleID string) error {
 func (r *API) GetReportDocument(reportDocumentID string, restrictedDataToken *string) (*apis.CallResponse[GetReportDocumentResponse], error) {
 	return apis.NewCall[GetReportDocumentResponse](http.MethodGet, pathPrefix+"/documents/"+reportDocumentID).
 		WithRestrictedDataToken(restrictedDataToken).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(0.0167, time.Second).
 		Execute(r.httpClient)
 }
