@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"sync/atomic"
 	"time"
 
@@ -20,6 +19,7 @@ type TokenUpdaterConfig struct {
 	RefreshToken string
 	ClientID     string
 	ClientSecret string
+	HTTPClient   HTTPRequester
 	Logger       logger.Logger
 }
 
@@ -28,6 +28,7 @@ type PeriodicTokenUpdater struct {
 	refreshToken string
 	clientID     string
 	clientSecret string
+	hTTPClient   HTTPRequester
 	log          logger.Logger
 }
 
@@ -46,6 +47,7 @@ func newTokenUpdater(config TokenUpdaterConfig) *PeriodicTokenUpdater {
 		clientID:     config.ClientID,
 		clientSecret: config.ClientSecret,
 		log:          config.Logger,
+		hTTPClient:   config.HTTPClient,
 	}
 }
 
@@ -64,6 +66,7 @@ func (t *PeriodicTokenUpdater) RunInBackground() (cancel func(), err error) {
 	t.log.Debugf("Fetching first access-tokenAPI")
 	ticker := time.NewTicker(1 * time.Millisecond)
 	done := make(chan bool)
+
 	go func() {
 		for {
 			select {
@@ -94,7 +97,7 @@ func (t *PeriodicTokenUpdater) RunInBackground() (cancel func(), err error) {
 
 func (t *PeriodicTokenUpdater) doTokenRequest() (*AccessTokenResponse, error) {
 	body := makeRequestBody(t.refreshToken, t.clientID, t.clientSecret)
-	resp, err := http.Post(tokenURL, "application/json", bytes.NewBuffer(body))
+	resp, err := t.hTTPClient.Post(tokenURL, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}

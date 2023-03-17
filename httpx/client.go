@@ -17,7 +17,7 @@ import (
 )
 
 type ClientConfig struct {
-	HTTPClient         *http.Client
+	HTTPClient         HTTPRequester
 	TokenUpdaterConfig TokenUpdaterConfig
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
@@ -52,13 +52,18 @@ func NewClient(config ClientConfig) (c *Client, err error) {
 type Client struct {
 	tokenUpdater           tokenUpdater
 	tokenUpdaterCancelFunc func()
-	hTTPClient             *http.Client
+	hTTPClient             HTTPRequester
 	endpoint               constants.Endpoint
 	region                 constants.Region
 	roleArn                string
 	aws4Signer             *v4.Signer
 	awsStsCredentials      *sts.Credentials
 	awsSession             *session.Session
+}
+
+type HTTPRequester interface {
+	Do(req *http.Request) (*http.Response, error)
+	Post(url string, bodyType string, body io.Reader) (*http.Response, error)
 }
 
 type tokenUpdater interface {
