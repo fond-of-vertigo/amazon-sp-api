@@ -15,10 +15,8 @@ type mockTokenUpdater struct {
 func (m *mockTokenUpdater) GetAccessToken() string {
 	return m.ReturnAccessToken
 }
-func (m *mockTokenUpdater) RunInBackground() error {
-	return nil
-}
-func (m *mockTokenUpdater) Stop() {
+func (m *mockTokenUpdater) RunInBackground() (func(), error) {
+	return func() {}, nil
 }
 
 func Test_httpClient_addAccessToken(t *testing.T) {
@@ -58,7 +56,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h := &Client{
-				httpClient:   tt.fields.HTTPClient,
+				hTTPClient:   tt.fields.HTTPClient,
 				tokenUpdater: tt.fields.TokenUpdater,
 			}
 			h.addAccessTokenToHeader(tt.request)
