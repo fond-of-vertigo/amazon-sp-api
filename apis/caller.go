@@ -81,26 +81,25 @@ func (a *Call[responseType]) Execute(httpClient HTTPClient) (*CallResponse[respo
 		Status: resp.StatusCode,
 	}
 
-	if callResp.IsSuccess() { // Response is OK
-		if resp.ContentLength > 0 {
-			if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
-				return nil, err
+	if callResp.IsError() {
+		err = fmt.Errorf("request with URL=%v returned with non-OK statuscode=%d", a.URL, callResp.Status)
+		if a.ParseErrorListOnError { // ErrorList is activated, try to parse it
+			if parseErr := unmarshalBody(resp, &callResp.ErrorList); parseErr != nil {
+				return nil, errors.Join(err, parseErr)
 			}
-		}
-		return callResp, nil
-	}
 
-	// Response is not OK
-	err = fmt.Errorf("request with URL=%v returned with non-OK statuscode=%d", a.URL, callResp.Status)
-	if a.ParseErrorListOnError { // ErrorList is activated, try to parse it
-		if parseErr := unmarshalBody(resp, &callResp.ErrorList); parseErr != nil {
-			return nil, errors.Join(err, parseErr)
+			return callResp, errors.Join(err, mapErrorListToError(callResp.ErrorList))
 		}
 
-		return callResp, errors.Join(err, mapErrorListToError(callResp.ErrorList))
+		return callResp, err
 	}
 
-	return callResp, err
+	if resp.ContentLength > 0 {
+		if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
+			return nil, err
+		}
+	}
+	return callResp, nil
 }
 
 func (a *Call[responseType]) execute(httpClient HTTPClient) (*http.Response, error) {
