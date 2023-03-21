@@ -23,6 +23,7 @@ type Config struct {
 	RoleArn            string
 	Endpoint           constants.Endpoint
 	Log                logger.Logger
+	HTTPClient         *http.Client
 }
 
 type Client struct {
@@ -40,7 +41,11 @@ func (s *Client) Close() {
 }
 
 func NewClient(config Config) (*Client, error) {
-	hc := http.DefaultClient
+	hc := config.HTTPClient
+	if config.HTTPClient == nil {
+		hc = http.DefaultClient
+	}
+
 	clientConfig := httpx.ClientConfig{
 		HTTPClient:         hc,
 		Endpoint:           config.Endpoint,
@@ -57,17 +62,17 @@ func NewClient(config Config) (*Client, error) {
 		},
 	}
 
-	httpClient, err := httpx.NewClient(clientConfig)
+	httpxClient, err := httpx.NewClient(clientConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
-		hTTPClient:  httpClient,
-		FinancesAPI: finances.NewAPI(httpClient),
-		FeedsAPI:    feeds.NewAPI(httpClient),
-		OrdersAPI:   orders.NewAPI(httpClient),
-		ReportsAPI:  reports.NewAPI(httpClient),
-		TokenAPI:    tokens.NewAPI(httpClient),
+		hTTPClient:  httpxClient,
+		FinancesAPI: finances.NewAPI(httpxClient),
+		FeedsAPI:    feeds.NewAPI(httpxClient),
+		OrdersAPI:   orders.NewAPI(httpxClient),
+		ReportsAPI:  reports.NewAPI(httpxClient),
+		TokenAPI:    tokens.NewAPI(httpxClient),
 	}, nil
 }
