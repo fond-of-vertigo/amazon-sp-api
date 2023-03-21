@@ -83,7 +83,7 @@ func (a *Call[responseType]) Execute(httpClient HTTPClient) (*CallResponse[respo
 
 	if callResp.IsError() {
 		err = fmt.Errorf("request with URL=%v returned with non-OK statuscode=%d", a.URL, callResp.Status)
-		if a.ParseErrorListOnError { // ErrorList is activated, try to parse it
+		if a.ParseErrorListOnError {
 			if parseErr := unmarshalBody(resp, &callResp.ErrorList); parseErr != nil {
 				return nil, errors.Join(err, parseErr)
 			}
