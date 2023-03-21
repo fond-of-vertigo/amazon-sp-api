@@ -63,8 +63,12 @@ func (t *PeriodicTokenUpdater) GetAccessToken() string {
 // RunInBackground starts a goroutine that fetches a new access token periodically
 // and stores it in the client. The goroutine is stopped when the returned cancel function is called.
 func (t *PeriodicTokenUpdater) RunInBackground() (cancel func(), err error) {
-	t.log.Debugf("Fetching first access-tokenAPI")
-	ticker := time.NewTicker(1 * time.Millisecond)
+	durationNextFetch, err := t.doInitialFetch()
+	if err != nil {
+		return nil, err
+	}
+
+	ticker := time.NewTicker(durationNextFetch)
 	done := make(chan bool)
 
 	go func() {
@@ -77,12 +81,12 @@ func (t *PeriodicTokenUpdater) RunInBackground() (cancel func(), err error) {
 				token, err := t.doTokenRequest()
 				if err != nil {
 					t.log.Errorf("Failed to fetch new access-tokenAPI: %s", err.Error())
+					ticker.Reset(constants.DefaultTokenUpdaterBackoffTime)
 					continue
 				}
-				t.accessToken.Store(&token.AccessToken) // store new token
-				secondsToWait := token.ExpiresIn - int(constants.ExpiryDelta/time.Second)
-				durationToWait := time.Duration(secondsToWait) * time.Second
-				ticker.Reset(durationToWait) // reset ticker for next token request
+				t.accessToken.Store(&token.AccessToken)
+				durationToWait := durationBetweenTokenRequests(token)
+				ticker.Reset(durationToWait)
 			}
 		}
 	}()
@@ -93,6 +97,23 @@ func (t *PeriodicTokenUpdater) RunInBackground() (cancel func(), err error) {
 	}
 	return cancelFunc, nil
 
+}
+
+func (t *PeriodicTokenUpdater) doInitialFetch() (time.Duration, error) {
+	t.log.Debugf("Fetching first access-tokenAPI")
+	token, err := t.doTokenRequest()
+	if err != nil {
+		return constants.DefaultTokenUpdaterBackoffTime, err
+	}
+	t.accessToken.Store(&token.AccessToken)
+	durationNextFetch := durationBetweenTokenRequests(token)
+	return durationNextFetch, nil
+}
+
+func durationBetweenTokenRequests(token *AccessTokenResponse) time.Duration {
+	secondsToWait := token.ExpiresIn - int(constants.ExpiryDelta/time.Second)
+	durationToWait := time.Duration(secondsToWait) * time.Second
+	return durationToWait
 }
 
 func (t *PeriodicTokenUpdater) doTokenRequest() (*AccessTokenResponse, error) {
