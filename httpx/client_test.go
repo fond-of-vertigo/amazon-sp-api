@@ -56,7 +56,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h := &Client{
-				hTTPClient:   tt.fields.HTTPClient,
+				httpClient:   tt.fields.HTTPClient,
 				tokenUpdater: tt.fields.TokenUpdater,
 			}
 			h.addAccessTokenToHeader(tt.request)

@@ -28,7 +28,7 @@ type ClientConfig struct {
 
 func NewClient(config ClientConfig) (c *Client, err error) {
 	c = &Client{
-		hTTPClient: config.HTTPClient,
+		httpClient: config.HTTPClient,
 		region:     config.Region,
 		roleArn:    config.RoleArn,
 		endpoint:   config.Endpoint,
@@ -52,7 +52,7 @@ func NewClient(config ClientConfig) (c *Client, err error) {
 type Client struct {
 	tokenUpdater           tokenUpdater
 	tokenUpdaterCancelFunc func()
-	hTTPClient             HTTPRequester
+	httpClient             HTTPRequester
 	endpoint               constants.Endpoint
 	region                 constants.Region
 	roleArn                string
@@ -78,7 +78,7 @@ func (h *Client) Do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	return h.hTTPClient.Do(req)
+	return h.httpClient.Do(req)
 }
 
 func (h *Client) GetEndpoint() constants.Endpoint {

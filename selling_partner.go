@@ -27,7 +27,7 @@ type Config struct {
 }
 
 type Client struct {
-	hTTPClient  *httpx.Client
+	httpClient  *httpx.Client
 	FinancesAPI *finances.API
 	FeedsAPI    *feeds.API
 	OrdersAPI   *orders.API
@@ -37,7 +37,7 @@ type Client struct {
 
 // Close stops the TokenUpdater thread
 func (s *Client) Close() {
-	s.hTTPClient.Close()
+	s.httpClient.Close()
 }
 
 func NewClient(config Config) (*Client, error) {
@@ -68,7 +68,7 @@ func NewClient(config Config) (*Client, error) {
 	}
 
 	return &Client{
-		hTTPClient:  httpxClient,
+		httpClient:  httpxClient,
 		FinancesAPI: finances.NewAPI(httpxClient),
 		FeedsAPI:    feeds.NewAPI(httpxClient),
 		OrdersAPI:   orders.NewAPI(httpxClient),

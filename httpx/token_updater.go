@@ -28,7 +28,7 @@ type PeriodicTokenUpdater struct {
 	refreshToken string
 	clientID     string
 	clientSecret string
-	hTTPClient   HTTPRequester
+	httpClient   HTTPRequester
 	log          logger.Logger
 }
 
@@ -47,7 +47,7 @@ func newTokenUpdater(config TokenUpdaterConfig) *PeriodicTokenUpdater {
 		clientID:     config.ClientID,
 		clientSecret: config.ClientSecret,
 		log:          config.Logger,
-		hTTPClient:   config.HTTPClient,
+		httpClient:   config.HTTPClient,
 	}
 }
 
@@ -118,7 +118,7 @@ func durationBetweenTokenRequests(token *AccessTokenResponse) time.Duration {
 
 func (t *PeriodicTokenUpdater) doTokenRequest() (*AccessTokenResponse, error) {
 	body := makeRequestBody(t.refreshToken, t.clientID, t.clientSecret)
-	resp, err := t.hTTPClient.Post(tokenURL, "application/json", bytes.NewBuffer(body))
+	resp, err := t.httpClient.Post(tokenURL, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
