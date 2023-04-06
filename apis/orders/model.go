@@ -839,3 +839,158 @@ func (f *GetOrdersFilter) GetQuery() url.Values {
 
 	return q
 }
+
+type GetOrderItemsApprovalsFilter struct {
+	NextToken          string               `json:"NextToken,omitempty"`
+	ItemApprovalTypes  []ItemApprovalType   `json:"ItemApprovalTypes,omitempty"`
+	ItemApprovalStatus []ItemApprovalStatus `json:"ItemApprovalStatus,omitempty"`
+}
+
+type GetOrderApprovalsResponse struct {
+	Payload *OrderApprovalsResponse `json:"payload,omitempty"`
+	Errors  []apis.Error            `json:"errors,omitempty"`
+}
+
+type OrderApprovalsResponse struct {
+	NextToken               string                `json:"NextToken,omitempty"`
+	OrderItemsApprovalsList []OrderItemsApprovals `json:"OrderItemsApprovalsList,omitempty"`
+}
+
+type OrderItemsApprovals struct {
+	OrderItemID    string             `json:"OrderItemId,omitempty"`
+	ApprovalType   ItemApprovalType   `json:"ApprovalType,omitempty"`
+	ApprovalStatus ItemApprovalStatus `json:"ApprovalStatus,omitempty"`
+}
+
+type ItemApprovalType string
+
+const LeonardiApproval ItemApprovalType = "LEONARDI_APPROVAL"
+
+var validItemApprovalTypes = utils.NewSet[ItemApprovalType](LeonardiApproval)
+
+func (v *ItemApprovalType) UnmarshalJSON(src []byte) error {
+	var value string
+	if err := json.Unmarshal(src, &value); err != nil {
+		return err
+	}
+
+	approvalType := ItemApprovalType(value)
+	if !validItemApprovalTypes.Has(approvalType) {
+		return fmt.Errorf("invalid ItemApprovalType: %s", value)
+	}
+
+	*v = approvalType
+	return nil
+}
+
+type ItemApprovalStatus string
+
+const (
+	PendingSellingPartnerApproval    ItemApprovalStatus = "PENDING_SELLING_PARTNER_APPROVAL"
+	ProcessingSellingPartnerApproval ItemApprovalStatus = "PROCESSING_SELLING_PARTNER_APPROVAL"
+	PendingAmazonApproval            ItemApprovalStatus = "PENDING_AMAZON_APPROVAL"
+	Approved                         ItemApprovalStatus = "APPROVED"
+	ApprovedWithChanges              ItemApprovalStatus = "APPROVED_WITH_CHANGES"
+	Declined                         ItemApprovalStatus = "DECLINED"
+)
+
+var validItemApprovalStatuses = utils.NewSet[ItemApprovalStatus](
+	PendingSellingPartnerApproval,
+	ProcessingSellingPartnerApproval,
+	PendingAmazonApproval,
+	Approved,
+	ApprovedWithChanges,
+	Declined,
+)
+
+func (v *ItemApprovalStatus) UnmarshalJSON(src []byte) error {
+	var value string
+	if err := json.Unmarshal(src, &value); err != nil {
+		return err
+	}
+
+	status := ItemApprovalStatus(value)
+	if !validItemApprovalStatuses.Has(status) {
+		return fmt.Errorf("invalid ItemApprovalStatus: %s", value)
+	}
+
+	*v = status
+	return nil
+}
+
+func (f *GetOrderItemsApprovalsFilter) GetQuery() url.Values {
+	q := url.Values{}
+	utils.AddToQueryIfSet(q, "NextToken", f.NextToken)
+	utils.AddToQueryIfSet(q, "ItemApprovalTypes", utils.MapToCommaString(f.ItemApprovalTypes))
+	utils.AddToQueryIfSet(q, "ItemApprovalStatus", utils.MapToCommaString(f.ItemApprovalStatus))
+	return q
+}
+
+type UpdateOrderApprovalsRequest struct {
+	Approver                   string                      `json:"Approver,omitempty"`
+	OrderItemsApprovalRequests []OrderItemsApprovalRequest `json:"OrderItemsApprovalRequests,omitempty"`
+}
+
+type OrderItemsApprovalRequest struct {
+	OrderItemID    string             `json:"OrderItemId,omitempty"`
+	ApprovalAction ItemApprovalAction `json:"ApprovalAction,omitempty"`
+}
+
+type ItemApprovalAction struct {
+	ActionType ActionType `json:"ActionType,omitempty"`
+	Comment    string     `json:"Comment,omitempty"`
+	Changes    Changes    `json:"Changes,omitempty"`
+}
+
+type ActionType string
+
+const (
+	Approve            ActionType = "APPROVE"
+	Decline            ActionType = "DECLINE"
+	ApproveWithChanges ActionType = "APPROVE_WITH_CHANGES"
+)
+
+type Changes struct {
+	ItemPrice     Money          `json:"itemPrice,omitempty"`
+	Quantity      int            `json:"quantity,omitempty"`
+	SubstitutedBy ItemIdentifier `json:"substitutedBy,omitempty"`
+}
+
+type ItemIdentifier struct {
+	IdentifierType IdentifierType `json:"identifierType,omitempty"`
+	Identifier     string         `json:"identifier,omitempty"`
+}
+
+type IdentifierType string
+
+const (
+	ASIN       IdentifierType = "ASIN"
+	SellerSKU  IdentifierType = "SELLER_SKU"
+	ExternalID IdentifierType = "EXTERNAL_ID"
+)
+
+type ConfirmShipmentRequest struct {
+	PackageDetail       PackageDetail           `json:"packageDetail,omitempty"`
+	CodCollectionMethod CodCollectionMethod     `json:"codCollectionMethod,omitempty"`
+	MarketplaceID       constants.MarketplaceID `json:"marketplaceId,omitempty"`
+}
+
+type PackageDetail struct {
+	PackageReferenceID     string                     `json:"packageReferenceId,omitempty"`
+	CarrierCode            string                     `json:"carrierCode,omitempty"`
+	CarrierName            string                     `json:"carrierName,omitempty"`
+	ShippingMethod         string                     `json:"shippingMethod,omitempty"`
+	TrackingNumber         string                     `json:"trackingNumber,omitempty"`
+	ShipDate               string                     `json:"shipDate,omitempty"`
+	ShipFromSupplySourceID string                     `json:"shipFromSupplySourceId,omitempty"`
+	OrderItems             []ConfirmShipmentOrderItem `json:"orderItems,omitempty"`
+}
+type ConfirmShipmentOrderItem struct {
+	OrderItemID       string   `json:"orderItemId,omitempty"`
+	Quantity          int      `json:"quantity,omitempty"`
+	TransparencyCodes []string `json:"transparencyCodes,omitempty"`
+}
+
+type CodCollectionMethod string
+
+const DirectPayment CodCollectionMethod = "DirectPayment"
