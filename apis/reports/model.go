@@ -2,6 +2,7 @@ package reports
 
 import (
 	"fmt"
+	"github.com/fond-of-vertigo/amazon-sp-api/internal/utils"
 	"net/url"
 	"time"
 
@@ -141,9 +142,9 @@ type GetReportsFilter struct {
 
 func (f *GetReportsFilter) GetQuery() url.Values {
 	q := url.Values{}
-	q.Add("reportTypes", apis.MapToCommaString(f.ReportTypes))
-	q.Add("processingStatuses", apis.MapToCommaString(f.ProcessingStatuses))
-	q.Add("marketplaceIds", apis.MapToCommaString(f.MarketplaceIDs))
+	q.Add("reportTypes", utils.MapToCommaString(f.ReportTypes))
+	q.Add("processingStatuses", utils.MapToCommaString(f.ProcessingStatuses))
+	q.Add("marketplaceIds", utils.MapToCommaString(f.MarketplaceIDs))
 	q.Add("pageSize", fmt.Sprint(f.PageSize))
 	q.Add("createdSince", f.CreatedSince.String())
 	q.Add("createdUntil", f.CreatedUntil.String())

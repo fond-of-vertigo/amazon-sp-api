@@ -3,6 +3,7 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fond-of-vertigo/amazon-sp-api/internal/utils"
 	"net/url"
 	"strconv"
 	"strings"
@@ -812,29 +813,29 @@ type GetOrdersFilter struct {
 func (f *GetOrdersFilter) GetQuery() url.Values {
 	q := url.Values{}
 
-	apis.AddToQueryIfSet(q, "CreatedAfter", f.CreateAfter.String())
-	apis.AddToQueryIfSet(q, "CreatedBefore", f.CreatedBefore.String())
-	apis.AddToQueryIfSet(q, "LastUpdatedAfter", f.LastUpdatedAfter.String())
-	apis.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
-	apis.AddToQueryIfSet(q, "OrderStatuses", apis.MapToCommaString(f.OrderStatuses))
-	apis.AddToQueryIfSet(q, "MarketplaceIds", apis.MapToCommaString(f.MarketplaceIDs))
-	apis.AddToQueryIfSet(q, "FulfillmentChannels", apis.MapToCommaString(f.FulfillmentChannels))
-	apis.AddToQueryIfSet(q, "PaymentMethods", apis.MapToCommaString(f.PaymentMethods))
-	apis.AddToQueryIfSet(q, "BuyerEmail", f.BuyerEmail)
-	apis.AddToQueryIfSet(q, "SellerOrderId", f.SellerOrderID)
+	utils.AddToQueryIfSet(q, "CreatedAfter", f.CreateAfter.String())
+	utils.AddToQueryIfSet(q, "CreatedBefore", f.CreatedBefore.String())
+	utils.AddToQueryIfSet(q, "LastUpdatedAfter", f.LastUpdatedAfter.String())
+	utils.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
+	utils.AddToQueryIfSet(q, "OrderStatuses", utils.MapToCommaString(f.OrderStatuses))
+	utils.AddToQueryIfSet(q, "MarketplaceIds", utils.MapToCommaString(f.MarketplaceIDs))
+	utils.AddToQueryIfSet(q, "FulfillmentChannels", utils.MapToCommaString(f.FulfillmentChannels))
+	utils.AddToQueryIfSet(q, "PaymentMethods", utils.MapToCommaString(f.PaymentMethods))
+	utils.AddToQueryIfSet(q, "BuyerEmail", f.BuyerEmail)
+	utils.AddToQueryIfSet(q, "SellerOrderId", f.SellerOrderID)
 	if f.MaxResultsPerPage < 1 || f.MaxResultsPerPage > 100 {
 		f.MaxResultsPerPage = 100
 	}
-	apis.AddToQueryIfSet(q, "MaxResultsPerPage", strconv.Itoa(f.MaxResultsPerPage))
-	apis.AddToQueryIfSet(q, "EasyShipShipmentStatuses", apis.MapToCommaString(f.EasyShipShipmentStatuses))
-	apis.AddToQueryIfSet(q, "ElectronicInvoiceStatuses", apis.MapToCommaString(f.ElectronicInvoiceStatuses))
-	apis.AddToQueryIfSet(q, "NextToken", f.NextToken)
-	apis.AddToQueryIfSet(q, "AmazonOrderIds", strings.Join(f.AmazonOrderIDs, ","))
-	apis.AddToQueryIfSet(q, "ActualFulfillmentSupplySourceId", f.ActualFulfillmentSupplySourceID)
+	utils.AddToQueryIfSet(q, "MaxResultsPerPage", strconv.Itoa(f.MaxResultsPerPage))
+	utils.AddToQueryIfSet(q, "EasyShipShipmentStatuses", utils.MapToCommaString(f.EasyShipShipmentStatuses))
+	utils.AddToQueryIfSet(q, "ElectronicInvoiceStatuses", utils.MapToCommaString(f.ElectronicInvoiceStatuses))
+	utils.AddToQueryIfSet(q, "NextToken", f.NextToken)
+	utils.AddToQueryIfSet(q, "AmazonOrderIds", strings.Join(f.AmazonOrderIDs, ","))
+	utils.AddToQueryIfSet(q, "ActualFulfillmentSupplySourceId", f.ActualFulfillmentSupplySourceID)
 	if f.IsISPU != nil {
-		apis.AddToQueryIfSet(q, "IsISPU", strconv.FormatBool(*f.IsISPU))
+		utils.AddToQueryIfSet(q, "IsISPU", strconv.FormatBool(*f.IsISPU))
 	}
-	apis.AddToQueryIfSet(q, "StoreChainStoreId", f.StoreChainStoreID)
+	utils.AddToQueryIfSet(q, "StoreChainStoreId", f.StoreChainStoreID)
 
 	return q
 }
