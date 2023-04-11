@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"github.com/google/go-cmp/cmp"
 	"net/url"
@@ -169,6 +170,68 @@ func TestNewSet(t *testing.T) {
 			set := NewSet[string](tt.args.items...)
 			if diff := cmp.Diff(set.m, tt.want); diff != "" {
 				t.Error(diff)
+			}
+		})
+	}
+}
+
+type Enum string
+
+const (
+	EnumA Enum = "A"
+	EnumB Enum = "B"
+	EnumC Enum = "C"
+)
+
+var AllowedEnumValues = NewSet[Enum](EnumA, EnumB, EnumC)
+
+func (e *Enum) UnmarshalJSON(b []byte) error {
+	e, err := UnmarshalJSONEnum[Enum](b, AllowedEnumValues)
+	return err
+}
+
+func TestUnmarshalJSONEnum(t *testing.T) {
+	type testJSON struct {
+		Value Enum `json:"value"`
+	}
+	type args struct {
+		in testJSON
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Valid EnumA used",
+			args: args{
+				in: testJSON{
+					Value: EnumA,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid enum value used",
+			args: args{
+				in: testJSON{
+					Value: "D",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b, err := json.Marshal(tt.args.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var testJSONUnmarshalled testJSON
+			err = json.Unmarshal(b, &testJSONUnmarshalled)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UnmarshalJSONEnum() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}

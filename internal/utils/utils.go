@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -65,4 +66,18 @@ func NewSet[T comparable](items ...T) *Set[T] {
 		s.Add(v)
 	}
 	return s
+}
+
+func UnmarshalJSONEnum[T ~string](src []byte, allowedValues *Set[T]) (*T, error) {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return nil, err
+	}
+	enumTypeValue := T(value)
+	if allowedValues.Has(enumTypeValue) {
+		return &enumTypeValue, nil
+	}
+
+	return nil, fmt.Errorf("%+v is not a valid enum of type %T", value, enumTypeValue)
 }

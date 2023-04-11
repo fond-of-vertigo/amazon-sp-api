@@ -1,8 +1,6 @@
 package orders
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -140,8 +138,8 @@ const (
 	EasyShipDamaged           EasyShipShipmentStatus = "Damaged"
 )
 
-// AllowedEasyShipShipmentStatusEnumValues are all allowed values of EasyShipShipmentStatus enum
-var AllowedEasyShipShipmentStatusEnumValues = []EasyShipShipmentStatus{
+// AllowedEasyShipShipmentStatus are all allowed values of EasyShipShipmentStatus enum
+var AllowedEasyShipShipmentStatus = utils.NewSet[EasyShipShipmentStatus](
 	EasyShipPendingSchedule,
 	EasyShipPendingPickUp,
 	EasyShipPendingDropOff,
@@ -158,23 +156,11 @@ var AllowedEasyShipShipmentStatusEnumValues = []EasyShipShipmentStatus{
 	EasyShipLost,
 	EasyShipOutForDelivery,
 	EasyShipDamaged,
-}
+)
 
 func (v *EasyShipShipmentStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	err := json.Unmarshal(src, &value)
-	if err != nil {
-		return err
-	}
-	enumTypeValue := EasyShipShipmentStatus(value)
-	for _, existing := range AllowedEasyShipShipmentStatusEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid EasyShipShipmentStatus", value)
+	v, err := utils.UnmarshalJSONEnum[EasyShipShipmentStatus](src, AllowedEasyShipShipmentStatus)
+	return err
 }
 
 // ElectronicInvoiceStatus The status of the electronic invoice.
@@ -189,30 +175,18 @@ const (
 	ElectronicInvoiceAccepted    ElectronicInvoiceStatus = "Accepted"
 )
 
-// AllowedElectronicInvoiceStatusEnumValues are all allowed values of ElectronicInvoiceStatus enum
-var AllowedElectronicInvoiceStatusEnumValues = []ElectronicInvoiceStatus{
+// AllowedElectronicInvoiceStatus are all allowed values of ElectronicInvoiceStatus enum
+var AllowedElectronicInvoiceStatus = utils.NewSet[ElectronicInvoiceStatus](
 	ElectronicInvoiceNotRequired,
 	ElectronicInvoiceNotFound,
 	ElectronicInvoiceProcessing,
 	ElectronicInvoiceErrored,
 	ElectronicInvoiceAccepted,
-}
+)
 
 func (v *ElectronicInvoiceStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	err := json.Unmarshal(src, &value)
-	if err != nil {
-		return err
-	}
-	enumTypeValue := ElectronicInvoiceStatus(value)
-	for _, existing := range AllowedElectronicInvoiceStatusEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid ElectronicInvoiceStatus", value)
+	v, err := utils.UnmarshalJSONEnum[ElectronicInvoiceStatus](src, AllowedElectronicInvoiceStatus)
+	return err
 }
 
 // FulfillmentInstruction Contains the instructions about the fulfillment like where should it be fulfilled from.
@@ -600,28 +574,16 @@ const (
 	ShipmentRefusedPickup  ShipmentStatus = "RefusedPickup"
 )
 
-// AllowedShipmentStatusEnumValues are all allowed values of ShipmentStatus enum
-var AllowedShipmentStatusEnumValues = []ShipmentStatus{
+// AllowedShipmentStatus are all allowed values of ShipmentStatus enum
+var AllowedShipmentStatus = utils.NewSet[ShipmentStatus](
 	ShipmentReadyForPickup,
 	ShipmentPickedUp,
 	ShipmentRefusedPickup,
-}
+)
 
 func (v *ShipmentStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	err := json.Unmarshal(src, &value)
-	if err != nil {
-		return err
-	}
-	enumTypeValue := ShipmentStatus(value)
-	for _, existing := range AllowedShipmentStatusEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid ShipmentStatus", value)
+	v, err := utils.UnmarshalJSONEnum[ShipmentStatus](src, AllowedShipmentStatus)
+	return err
 }
 
 // TaxClassification The tax classification for the order.
@@ -687,30 +649,18 @@ const (
 	VerificationCancelled VerificationStatus = "Cancelled"
 )
 
-// AllowedVerificationStatusEnumValues are all allowed values of VerificationStatus enum
-var AllowedVerificationStatusEnumValues = []VerificationStatus{
+// AllowedVerificationStatus are all allowed values of VerificationStatus enum
+var AllowedVerificationStatus = utils.NewSet[VerificationStatus](
 	VerificationPending,
 	VerificationApproved,
 	VerificationRejected,
 	VerificationExpired,
 	VerificationCancelled,
-}
+)
 
 func (v *VerificationStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	err := json.Unmarshal(src, &value)
-	if err != nil {
-		return err
-	}
-	enumTypeValue := VerificationStatus(value)
-	for _, existing := range AllowedVerificationStatusEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid VerificationStatus", value)
+	v, err := utils.UnmarshalJSONEnum[VerificationStatus](src, AllowedVerificationStatus)
+	return err
 }
 
 // OrderStatus The verification status of the order.
@@ -872,21 +822,11 @@ type ItemApprovalType string
 
 const LeonardiApproval ItemApprovalType = "LEONARDI_APPROVAL"
 
-var validItemApprovalTypes = utils.NewSet[ItemApprovalType](LeonardiApproval)
+var AllowedItemApprovalTypes = utils.NewSet[ItemApprovalType](LeonardiApproval)
 
 func (v *ItemApprovalType) UnmarshalJSON(src []byte) error {
-	var value string
-	if err := json.Unmarshal(src, &value); err != nil {
-		return err
-	}
-
-	approvalType := ItemApprovalType(value)
-	if !validItemApprovalTypes.Has(approvalType) {
-		return fmt.Errorf("invalid ItemApprovalType: %s", value)
-	}
-
-	*v = approvalType
-	return nil
+	v, err := utils.UnmarshalJSONEnum[ItemApprovalType](src, AllowedItemApprovalTypes)
+	return err
 }
 
 type ItemApprovalStatus string
@@ -900,7 +840,7 @@ const (
 	Declined                         ItemApprovalStatus = "DECLINED"
 )
 
-var validItemApprovalStatuses = utils.NewSet[ItemApprovalStatus](
+var AllowedItemApprovalStatus = utils.NewSet[ItemApprovalStatus](
 	PendingSellingPartnerApproval,
 	ProcessingSellingPartnerApproval,
 	PendingAmazonApproval,
@@ -910,18 +850,8 @@ var validItemApprovalStatuses = utils.NewSet[ItemApprovalStatus](
 )
 
 func (v *ItemApprovalStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	if err := json.Unmarshal(src, &value); err != nil {
-		return err
-	}
-
-	status := ItemApprovalStatus(value)
-	if !validItemApprovalStatuses.Has(status) {
-		return fmt.Errorf("invalid ItemApprovalStatus: %s", value)
-	}
-
-	*v = status
-	return nil
+	v, err := utils.UnmarshalJSONEnum[ItemApprovalStatus](src, AllowedItemApprovalStatus)
+	return err
 }
 
 func (f *GetOrderItemsApprovalsFilter) GetQuery() url.Values {
@@ -1011,25 +941,15 @@ const (
 	PalletDisabled OtherDeliveryAttribute = "PALLET_DISABLED"
 )
 
-var validOtherDeliveryAttributes = utils.NewSet[OtherDeliveryAttribute](
+var AllowedOtherDeliveryAttributes = utils.NewSet[OtherDeliveryAttribute](
 	HasAccessPoint,
 	PalletEnabled,
 	PalletDisabled,
 )
 
 func (v *OtherDeliveryAttribute) UnmarshalJSON(src []byte) error {
-	var value string
-	if err := json.Unmarshal(src, &value); err != nil {
-		return err
-	}
-
-	attribute := OtherDeliveryAttribute(value)
-	if !validOtherDeliveryAttributes.Has(attribute) {
-		return fmt.Errorf("invalid OtherDeliveryAttribute: %s", value)
-	}
-
-	*v = attribute
-	return nil
+	v, err := utils.UnmarshalJSONEnum[OtherDeliveryAttribute](src, AllowedOtherDeliveryAttributes)
+	return err
 }
 
 type DeliveryPreferences struct {
