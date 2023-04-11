@@ -3,13 +3,13 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fond-of-vertigo/amazon-sp-api/internal/utils"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/fond-of-vertigo/amazon-sp-api/internal/utils"
 )
 
 type ResponsibleParty string
@@ -381,13 +381,19 @@ type Order struct {
 	// Whether the order contains regulated items which may require additional approval steps before being fulfilled.
 	HasRegulatedItems       *bool                    `json:"HasRegulatedItems,omitempty"`
 	ElectronicInvoiceStatus *ElectronicInvoiceStatus `json:"ElectronicInvoiceStatus,omitempty"`
+	// Set of approval types which applies to at least one order item in the order.
+	ItemApprovalTypes []ItemApprovalType `json:"ItemApprovalTypes,omitempty"`
+	// Subset of all ItemApprovalStatus that are set in at least one of the order items subject to approvals.
+	ItemApprovalStatus []ItemApprovalStatus `json:"ItemApprovalStatus,omitempty"`
 }
 
 // OrderAddress The shipping address for the order.
 type OrderAddress struct {
 	// An Amazon-defined order identifier, in 3-7-7 format.
-	AmazonOrderId   string   `json:"AmazonOrderId"`
-	ShippingAddress *Address `json:"ShippingAddress,omitempty"`
+	AmazonOrderId       string               `json:"AmazonOrderId"`
+	BuyerCompanyName    string               `json:"BuyerCompanyName,omitempty"`
+	ShippingAddress     *Address             `json:"ShippingAddress,omitempty"`
+	DeliveryPreferences *DeliveryPreferences `json:"DeliveryPreferences,omitempty"`
 }
 
 // OrderBuyerInfo Buyer information for an order.
@@ -994,3 +1000,130 @@ type ConfirmShipmentOrderItem struct {
 type CodCollectionMethod string
 
 const DirectPayment CodCollectionMethod = "DirectPayment"
+
+// ---
+
+type OtherDeliveryAttribute string
+
+const (
+	HasAccessPoint OtherDeliveryAttribute = "HAS_ACCESS_POINT"
+	PalletEnabled  OtherDeliveryAttribute = "PALLET_ENABLED"
+	PalletDisabled OtherDeliveryAttribute = "PALLET_DISABLED"
+)
+
+var validOtherDeliveryAttributes = utils.NewSet[OtherDeliveryAttribute](
+	HasAccessPoint,
+	PalletEnabled,
+	PalletDisabled,
+)
+
+func (v *OtherDeliveryAttribute) UnmarshalJSON(src []byte) error {
+	var value string
+	if err := json.Unmarshal(src, &value); err != nil {
+		return err
+	}
+
+	attribute := OtherDeliveryAttribute(value)
+	if !validOtherDeliveryAttributes.Has(attribute) {
+		return fmt.Errorf("invalid OtherDeliveryAttribute: %s", value)
+	}
+
+	*v = attribute
+	return nil
+}
+
+type DeliveryPreferences struct {
+	// Drop-off location selected by the customer.
+	DropOffLocation       *string                `json:"DropOffLocation,omitempty"`
+	PreferredDeliveryTime *PreferredDeliveryTime `json:"PreferredDeliveryTime,omitempty"`
+	// Enumerated list of miscellaneous delivery attributes associated with the shipping address.
+	OtherAttributes []OtherDeliveryAttribute `json:"OtherAttributes,omitempty"`
+	// Building instructions, nearby landmark or navigation instructions.
+	AddressInstructions *string `json:"AddressInstructions,omitempty"`
+}
+
+type OpenTimeInterval struct {
+	// The hour when the business opens or closes.
+	Hour *int32 `json:"Hour,omitempty"`
+	// The minute when the business opens or closes.
+	Minute *int32 `json:"Minute,omitempty"`
+}
+
+type ItemApprovalActionChanges struct {
+	ItemPrice *Money `json:"ItemPrice,omitempty"`
+	// Quantity approved. If substitutedBy is specified, this value applies to the substitution item.
+	Quantity      *int32          `json:"Quantity,omitempty"`
+	SubstitutedBy *ItemIdentifier `json:"SubstitutedBy,omitempty"`
+}
+
+type BusinessHours struct {
+	// Day of the week.
+	DayOfWeek *string `json:"DayOfWeek,omitempty"`
+	// Time window during the day when the business is open.
+	OpenIntervals []OpenInterval `json:"OpenIntervals,omitempty"`
+}
+
+type ExceptionDates struct {
+	// Date when the business is closed, in ISO-8601 date format.
+	ExceptionDate *string `json:"ExceptionDate,omitempty"`
+	// Boolean indicating if the business is closed or open on that date.
+	IsOpen *bool `json:"IsOpen,omitempty"`
+	// Time window during the day when the business is open.
+	OpenIntervals []OpenInterval `json:"OpenIntervals,omitempty"`
+}
+
+type OrderItemApprovalRequest struct {
+	// The unique identifier of the order item.
+	OrderItemId    string             `json:"OrderItemId"`
+	ApprovalAction ItemApprovalAction `json:"ApprovalAction"`
+}
+
+type OpenInterval struct {
+	StartTime *OpenTimeInterval `json:"StartTime,omitempty"`
+	EndTime   *OpenTimeInterval `json:"EndTime,omitempty"`
+}
+
+type OrderItemApprovals struct {
+	// The unique identifier of the order item.
+	OrderItemId    string             `json:"OrderItemId"`
+	ApprovalType   ItemApprovalType   `json:"ApprovalType"`
+	ApprovalStatus ItemApprovalStatus `json:"ApprovalStatus"`
+	ItemApprovals  []ItemApproval     `json:"ItemApprovals"`
+}
+
+type ItemApprovalContext struct {
+	ApprovalType   ItemApprovalType   `json:"ApprovalType"`
+	ApprovalStatus ItemApprovalStatus `json:"ApprovalStatus"`
+	// List of additional data elements supporting the approval process. Check the applicable restrictions at the specific approval type schemas.
+	ApprovalSupportData []ApprovalSupportDataElement `json:"ApprovalSupportData,omitempty"`
+}
+
+type ItemApproval struct {
+	// Sequence number of the item approval. Each ItemApproval gets its sequenceId automatically from a monotonic increasing function.
+	SequenceId int32 `json:"SequenceId"`
+	// Timestamp when the ItemApproval was recorded by Amazon's internal order approvals system. In ISO 8601 date time format.
+	Timestamp string `json:"Timestamp"`
+	// High level actors involved in the approval process.
+	Actor string `json:"Actor"`
+	// Person or system that triggers the approval actions on behalf of the actor.
+	Approver       *string            `json:"Approver,omitempty"`
+	ApprovalAction ItemApprovalAction `json:"ApprovalAction"`
+	// Status of approval action.
+	ApprovalActionProcessStatus string `json:"ApprovalActionProcessStatus"`
+	// Optional message to communicate optional additional context about the current status of the approval action.
+	ApprovalActionProcessStatusMessage *string `json:"ApprovalActionProcessStatusMessage,omitempty"`
+}
+
+type ApprovalSupportDataElement struct {
+	// Name of the approval support element. Allowed names are defined in specific approval types schemas.
+	Name string `json:"Name"`
+	// String value of the approval support element.
+	Value string `json:"Value"`
+}
+
+type PreferredDeliveryTime struct {
+	// Business hours when the business is open for deliveries.
+	BusinessHours []BusinessHours `json:"BusinessHours,omitempty"`
+	// Dates when the business is closed in the next 30 days.
+	ExceptionDates []ExceptionDates `json:"ExceptionDates,omitempty"`
+}
