@@ -1,7 +1,9 @@
-package apis
+package utils
 
 import (
+	"encoding/json"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"reflect"
 	"testing"
@@ -119,6 +121,117 @@ func TestAddToQueryIfSet(t *testing.T) {
 			AddToQueryIfSet(tt.args.q, tt.args.key, tt.args.value)
 			if !reflect.DeepEqual(tt.args.q, tt.want) {
 				t.Errorf("AddToQueryIfSet() = %v, want %v", tt.args.q, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewSet(t *testing.T) {
+	type args[T comparable] struct {
+		items []T
+	}
+	type testCase[T comparable] struct {
+		name string
+		args args[T]
+		want map[T]struct{}
+	}
+	tests := []testCase[string]{
+		{
+			name: "empty",
+			args: args[string]{
+				items: []string{},
+			},
+			want: nil,
+		},
+		{
+			name: "one",
+			args: args[string]{
+				items: []string{"a"},
+			},
+			want: map[string]struct{}{"a": {}},
+		},
+		{
+			name: "two",
+			args: args[string]{
+				items: []string{"a", "b"},
+			},
+			want: map[string]struct{}{"a": {}, "b": {}},
+		},
+		{
+			name: "two with duplicates",
+			args: args[string]{
+				items: []string{"a", "b", "a"},
+			},
+			want: map[string]struct{}{"a": {}, "b": {}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			set := NewSet[string](tt.args.items...)
+			if diff := cmp.Diff(set.m, tt.want); diff != "" {
+				t.Error(diff)
+			}
+		})
+	}
+}
+
+type Enum string
+
+const (
+	EnumA Enum = "A"
+	EnumB Enum = "B"
+	EnumC Enum = "C"
+)
+
+var AllowedEnumValues = NewSet[Enum](EnumA, EnumB, EnumC)
+
+func (e *Enum) UnmarshalJSON(b []byte) error {
+	e, err := UnmarshalJSONEnum[Enum](b, AllowedEnumValues)
+	return err
+}
+
+func TestUnmarshalJSONEnum(t *testing.T) {
+	type testJSON struct {
+		Value Enum `json:"value"`
+	}
+	type args struct {
+		in testJSON
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Valid EnumA used",
+			args: args{
+				in: testJSON{
+					Value: EnumA,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Invalid enum value used",
+			args: args{
+				in: testJSON{
+					Value: "D",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b, err := json.Marshal(tt.args.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var testJSONUnmarshalled testJSON
+			err = json.Unmarshal(b, &testJSONUnmarshalled)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UnmarshalJSONEnum() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}

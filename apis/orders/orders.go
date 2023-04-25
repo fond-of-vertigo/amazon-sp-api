@@ -3,6 +3,7 @@ package orders
 import (
 	"encoding/json"
 	"errors"
+	"go/types"
 	"net/http"
 	"net/url"
 	"time"
@@ -118,5 +119,50 @@ func (a *API) UpdateVerificationStatus(orderID string, payload *UpdateVerificati
 	return apis.NewCall[UpdateVerificationStatusErrorResponse](http.MethodPatch, pathPrefix+"/orders/"+orderID+"/regulatedInfo").
 		WithBody(body).
 		WithRateLimit(0.5, time.Second).
+		Execute(a.httpClient)
+}
+
+// GetOrderItemsApprovals returns detailed order items approvals information for the order specified.
+// If NextToken is provided, it's used to retrieve the next page of order items approvals.
+func (a *API) GetOrderItemsApprovals(orderID string, filter GetOrderItemsApprovalsFilter) (*apis.CallResponse[GetOrderApprovalsResponse], error) {
+	if len(filter.ItemApprovalTypes) > 1 {
+		return nil, errors.New("itemApprovalTypes must not contain more than 1 element")
+	}
+
+	if len(filter.ItemApprovalStatus) > 6 {
+		return nil, errors.New("itemApprovalStatus must not contain more than 6 elements")
+	}
+
+	return apis.NewCall[GetOrderApprovalsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/orderItems/approvals").
+		WithQueryParams(filter.GetQuery()).
+		WithRateLimit(0.5, time.Second).
+		Execute(a.httpClient)
+}
+
+// UpdateOrderItemsApprovals updates the oder items approvals for the specified order.
+func (a *API) UpdateOrderItemsApprovals(orderID string, payload *UpdateOrderApprovalsRequest) (*apis.CallResponse[types.Nil], error) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return apis.NewCall[types.Nil](http.MethodPost, pathPrefix+"/orders/"+orderID+"/orderItems/approvals").
+		WithBody(body).
+		WithParseErrorListOnError(true).
+		WithRateLimit(5, time.Second).
+		Execute(a.httpClient)
+}
+
+// ConfirmShipment updates the shipment status for the specified order.
+func (a *API) ConfirmShipment(orderID string, payload *ConfirmShipmentRequest) (*apis.CallResponse[types.Nil], error) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return apis.NewCall[types.Nil](http.MethodPost, pathPrefix+"/orders/"+orderID+"/shipmentConfirmation").
+		WithBody(body).
+		WithParseErrorListOnError(true).
+		WithRateLimit(2, time.Second).
 		Execute(a.httpClient)
 }

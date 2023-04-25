@@ -1,6 +1,7 @@
 package feeds
 
 import (
+	"github.com/fond-of-vertigo/amazon-sp-api/internal/utils"
 	"net/url"
 	"strconv"
 	"strings"
@@ -100,13 +101,13 @@ type GetFeedsRequestFilter struct {
 func (f *GetFeedsRequestFilter) GetQuery() url.Values {
 	q := url.Values{}
 
-	feedTypes := strings.Join(apis.FirstNElementsOfSlice(f.FeedTypes, 10), ",")
+	feedTypes := strings.Join(utils.FirstNElementsOfSlice(f.FeedTypes, 10), ",")
 	if feedTypes != "" {
 		q.Set("feedTypes", feedTypes)
 	}
 
-	topTenMarketplaceIDs := apis.FirstNElementsOfSlice(f.MarketplaceIDs, 10)
-	marketplaceIds := apis.MapToCommaString(topTenMarketplaceIDs)
+	topTenMarketplaceIDs := utils.FirstNElementsOfSlice(f.MarketplaceIDs, 10)
+	marketplaceIds := utils.MapToCommaString(topTenMarketplaceIDs)
 	if marketplaceIds != "" {
 		q.Set("marketplaceIds", marketplaceIds)
 	}

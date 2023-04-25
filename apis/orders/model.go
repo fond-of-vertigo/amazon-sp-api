@@ -1,14 +1,13 @@
 package orders
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/fond-of-vertigo/amazon-sp-api/apis"
 	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/fond-of-vertigo/amazon-sp-api/internal/utils"
 )
 
 type ResponsibleParty string
@@ -139,8 +138,8 @@ const (
 	EasyShipDamaged           EasyShipShipmentStatus = "Damaged"
 )
 
-// AllowedEasyShipShipmentStatusEnumValues are all allowed values of EasyShipShipmentStatus enum
-var AllowedEasyShipShipmentStatusEnumValues = []EasyShipShipmentStatus{
+// AllowedEasyShipShipmentStatus are all allowed values of EasyShipShipmentStatus enum
+var AllowedEasyShipShipmentStatus = utils.NewSet[EasyShipShipmentStatus](
 	EasyShipPendingSchedule,
 	EasyShipPendingPickUp,
 	EasyShipPendingDropOff,
@@ -157,23 +156,11 @@ var AllowedEasyShipShipmentStatusEnumValues = []EasyShipShipmentStatus{
 	EasyShipLost,
 	EasyShipOutForDelivery,
 	EasyShipDamaged,
-}
+)
 
 func (v *EasyShipShipmentStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	err := json.Unmarshal(src, &value)
-	if err != nil {
-		return err
-	}
-	enumTypeValue := EasyShipShipmentStatus(value)
-	for _, existing := range AllowedEasyShipShipmentStatusEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid EasyShipShipmentStatus", value)
+	v, err := utils.UnmarshalJSONEnum[EasyShipShipmentStatus](src, AllowedEasyShipShipmentStatus)
+	return err
 }
 
 // ElectronicInvoiceStatus The status of the electronic invoice.
@@ -188,30 +175,18 @@ const (
 	ElectronicInvoiceAccepted    ElectronicInvoiceStatus = "Accepted"
 )
 
-// AllowedElectronicInvoiceStatusEnumValues are all allowed values of ElectronicInvoiceStatus enum
-var AllowedElectronicInvoiceStatusEnumValues = []ElectronicInvoiceStatus{
+// AllowedElectronicInvoiceStatus are all allowed values of ElectronicInvoiceStatus enum
+var AllowedElectronicInvoiceStatus = utils.NewSet[ElectronicInvoiceStatus](
 	ElectronicInvoiceNotRequired,
 	ElectronicInvoiceNotFound,
 	ElectronicInvoiceProcessing,
 	ElectronicInvoiceErrored,
 	ElectronicInvoiceAccepted,
-}
+)
 
 func (v *ElectronicInvoiceStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	err := json.Unmarshal(src, &value)
-	if err != nil {
-		return err
-	}
-	enumTypeValue := ElectronicInvoiceStatus(value)
-	for _, existing := range AllowedElectronicInvoiceStatusEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid ElectronicInvoiceStatus", value)
+	v, err := utils.UnmarshalJSONEnum[ElectronicInvoiceStatus](src, AllowedElectronicInvoiceStatus)
+	return err
 }
 
 // FulfillmentInstruction Contains the instructions about the fulfillment like where should it be fulfilled from.
@@ -380,13 +355,19 @@ type Order struct {
 	// Whether the order contains regulated items which may require additional approval steps before being fulfilled.
 	HasRegulatedItems       *bool                    `json:"HasRegulatedItems,omitempty"`
 	ElectronicInvoiceStatus *ElectronicInvoiceStatus `json:"ElectronicInvoiceStatus,omitempty"`
+	// Set of approval types which applies to at least one order item in the order.
+	ItemApprovalTypes []ItemApprovalType `json:"ItemApprovalTypes,omitempty"`
+	// Subset of all ItemApprovalStatus that are set in at least one of the order items subject to approvals.
+	ItemApprovalStatus []ItemApprovalStatus `json:"ItemApprovalStatus,omitempty"`
 }
 
 // OrderAddress The shipping address for the order.
 type OrderAddress struct {
 	// An Amazon-defined order identifier, in 3-7-7 format.
-	AmazonOrderId   string   `json:"AmazonOrderId"`
-	ShippingAddress *Address `json:"ShippingAddress,omitempty"`
+	AmazonOrderId       string               `json:"AmazonOrderId"`
+	BuyerCompanyName    string               `json:"BuyerCompanyName,omitempty"`
+	ShippingAddress     *Address             `json:"ShippingAddress,omitempty"`
+	DeliveryPreferences *DeliveryPreferences `json:"DeliveryPreferences,omitempty"`
 }
 
 // OrderBuyerInfo Buyer information for an order.
@@ -593,28 +574,16 @@ const (
 	ShipmentRefusedPickup  ShipmentStatus = "RefusedPickup"
 )
 
-// AllowedShipmentStatusEnumValues are all allowed values of ShipmentStatus enum
-var AllowedShipmentStatusEnumValues = []ShipmentStatus{
+// AllowedShipmentStatus are all allowed values of ShipmentStatus enum
+var AllowedShipmentStatus = utils.NewSet[ShipmentStatus](
 	ShipmentReadyForPickup,
 	ShipmentPickedUp,
 	ShipmentRefusedPickup,
-}
+)
 
 func (v *ShipmentStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	err := json.Unmarshal(src, &value)
-	if err != nil {
-		return err
-	}
-	enumTypeValue := ShipmentStatus(value)
-	for _, existing := range AllowedShipmentStatusEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid ShipmentStatus", value)
+	v, err := utils.UnmarshalJSONEnum[ShipmentStatus](src, AllowedShipmentStatus)
+	return err
 }
 
 // TaxClassification The tax classification for the order.
@@ -680,30 +649,18 @@ const (
 	VerificationCancelled VerificationStatus = "Cancelled"
 )
 
-// AllowedVerificationStatusEnumValues are all allowed values of VerificationStatus enum
-var AllowedVerificationStatusEnumValues = []VerificationStatus{
+// AllowedVerificationStatus are all allowed values of VerificationStatus enum
+var AllowedVerificationStatus = utils.NewSet[VerificationStatus](
 	VerificationPending,
 	VerificationApproved,
 	VerificationRejected,
 	VerificationExpired,
 	VerificationCancelled,
-}
+)
 
 func (v *VerificationStatus) UnmarshalJSON(src []byte) error {
-	var value string
-	err := json.Unmarshal(src, &value)
-	if err != nil {
-		return err
-	}
-	enumTypeValue := VerificationStatus(value)
-	for _, existing := range AllowedVerificationStatusEnumValues {
-		if existing == enumTypeValue {
-			*v = enumTypeValue
-			return nil
-		}
-	}
-
-	return fmt.Errorf("%+v is not a valid VerificationStatus", value)
+	v, err := utils.UnmarshalJSONEnum[VerificationStatus](src, AllowedVerificationStatus)
+	return err
 }
 
 // OrderStatus The verification status of the order.
@@ -812,29 +769,281 @@ type GetOrdersFilter struct {
 func (f *GetOrdersFilter) GetQuery() url.Values {
 	q := url.Values{}
 
-	apis.AddToQueryIfSet(q, "CreatedAfter", f.CreateAfter.String())
-	apis.AddToQueryIfSet(q, "CreatedBefore", f.CreatedBefore.String())
-	apis.AddToQueryIfSet(q, "LastUpdatedAfter", f.LastUpdatedAfter.String())
-	apis.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
-	apis.AddToQueryIfSet(q, "OrderStatuses", apis.MapToCommaString(f.OrderStatuses))
-	apis.AddToQueryIfSet(q, "MarketplaceIds", apis.MapToCommaString(f.MarketplaceIDs))
-	apis.AddToQueryIfSet(q, "FulfillmentChannels", apis.MapToCommaString(f.FulfillmentChannels))
-	apis.AddToQueryIfSet(q, "PaymentMethods", apis.MapToCommaString(f.PaymentMethods))
-	apis.AddToQueryIfSet(q, "BuyerEmail", f.BuyerEmail)
-	apis.AddToQueryIfSet(q, "SellerOrderId", f.SellerOrderID)
+	utils.AddToQueryIfSet(q, "CreatedAfter", f.CreateAfter.String())
+	utils.AddToQueryIfSet(q, "CreatedBefore", f.CreatedBefore.String())
+	utils.AddToQueryIfSet(q, "LastUpdatedAfter", f.LastUpdatedAfter.String())
+	utils.AddToQueryIfSet(q, "LastUpdatedBefore", f.LastUpdatedBefore.String())
+	utils.AddToQueryIfSet(q, "OrderStatuses", utils.MapToCommaString(f.OrderStatuses))
+	utils.AddToQueryIfSet(q, "MarketplaceIds", utils.MapToCommaString(f.MarketplaceIDs))
+	utils.AddToQueryIfSet(q, "FulfillmentChannels", utils.MapToCommaString(f.FulfillmentChannels))
+	utils.AddToQueryIfSet(q, "PaymentMethods", utils.MapToCommaString(f.PaymentMethods))
+	utils.AddToQueryIfSet(q, "BuyerEmail", f.BuyerEmail)
+	utils.AddToQueryIfSet(q, "SellerOrderId", f.SellerOrderID)
 	if f.MaxResultsPerPage < 1 || f.MaxResultsPerPage > 100 {
 		f.MaxResultsPerPage = 100
 	}
-	apis.AddToQueryIfSet(q, "MaxResultsPerPage", strconv.Itoa(f.MaxResultsPerPage))
-	apis.AddToQueryIfSet(q, "EasyShipShipmentStatuses", apis.MapToCommaString(f.EasyShipShipmentStatuses))
-	apis.AddToQueryIfSet(q, "ElectronicInvoiceStatuses", apis.MapToCommaString(f.ElectronicInvoiceStatuses))
-	apis.AddToQueryIfSet(q, "NextToken", f.NextToken)
-	apis.AddToQueryIfSet(q, "AmazonOrderIds", strings.Join(f.AmazonOrderIDs, ","))
-	apis.AddToQueryIfSet(q, "ActualFulfillmentSupplySourceId", f.ActualFulfillmentSupplySourceID)
+	utils.AddToQueryIfSet(q, "MaxResultsPerPage", strconv.Itoa(f.MaxResultsPerPage))
+	utils.AddToQueryIfSet(q, "EasyShipShipmentStatuses", utils.MapToCommaString(f.EasyShipShipmentStatuses))
+	utils.AddToQueryIfSet(q, "ElectronicInvoiceStatuses", utils.MapToCommaString(f.ElectronicInvoiceStatuses))
+	utils.AddToQueryIfSet(q, "NextToken", f.NextToken)
+	utils.AddToQueryIfSet(q, "AmazonOrderIds", strings.Join(f.AmazonOrderIDs, ","))
+	utils.AddToQueryIfSet(q, "ActualFulfillmentSupplySourceId", f.ActualFulfillmentSupplySourceID)
 	if f.IsISPU != nil {
-		apis.AddToQueryIfSet(q, "IsISPU", strconv.FormatBool(*f.IsISPU))
+		utils.AddToQueryIfSet(q, "IsISPU", strconv.FormatBool(*f.IsISPU))
 	}
-	apis.AddToQueryIfSet(q, "StoreChainStoreId", f.StoreChainStoreID)
+	utils.AddToQueryIfSet(q, "StoreChainStoreId", f.StoreChainStoreID)
 
 	return q
+}
+
+type GetOrderItemsApprovalsFilter struct {
+	NextToken          string               `json:"NextToken,omitempty"`
+	ItemApprovalTypes  []ItemApprovalType   `json:"ItemApprovalTypes,omitempty"`
+	ItemApprovalStatus []ItemApprovalStatus `json:"ItemApprovalStatus,omitempty"`
+}
+
+type GetOrderApprovalsResponse struct {
+	Payload *OrderApprovalsResponse `json:"payload,omitempty"`
+	Errors  []apis.Error            `json:"errors,omitempty"`
+}
+
+type OrderApprovalsResponse struct {
+	NextToken               string                `json:"NextToken,omitempty"`
+	OrderItemsApprovalsList []OrderItemsApprovals `json:"OrderItemsApprovalsList,omitempty"`
+}
+
+type OrderItemsApprovals struct {
+	OrderItemID    string             `json:"OrderItemId,omitempty"`
+	ApprovalType   ItemApprovalType   `json:"ApprovalType,omitempty"`
+	ApprovalStatus ItemApprovalStatus `json:"ApprovalStatus,omitempty"`
+}
+
+type ItemApprovalType string
+
+const LeonardiApproval ItemApprovalType = "LEONARDI_APPROVAL"
+
+var AllowedItemApprovalTypes = utils.NewSet[ItemApprovalType](LeonardiApproval)
+
+func (v *ItemApprovalType) UnmarshalJSON(src []byte) error {
+	v, err := utils.UnmarshalJSONEnum[ItemApprovalType](src, AllowedItemApprovalTypes)
+	return err
+}
+
+type ItemApprovalStatus string
+
+const (
+	PendingSellingPartnerApproval    ItemApprovalStatus = "PENDING_SELLING_PARTNER_APPROVAL"
+	ProcessingSellingPartnerApproval ItemApprovalStatus = "PROCESSING_SELLING_PARTNER_APPROVAL"
+	PendingAmazonApproval            ItemApprovalStatus = "PENDING_AMAZON_APPROVAL"
+	Approved                         ItemApprovalStatus = "APPROVED"
+	ApprovedWithChanges              ItemApprovalStatus = "APPROVED_WITH_CHANGES"
+	Declined                         ItemApprovalStatus = "DECLINED"
+)
+
+var AllowedItemApprovalStatus = utils.NewSet[ItemApprovalStatus](
+	PendingSellingPartnerApproval,
+	ProcessingSellingPartnerApproval,
+	PendingAmazonApproval,
+	Approved,
+	ApprovedWithChanges,
+	Declined,
+)
+
+func (v *ItemApprovalStatus) UnmarshalJSON(src []byte) error {
+	v, err := utils.UnmarshalJSONEnum[ItemApprovalStatus](src, AllowedItemApprovalStatus)
+	return err
+}
+
+func (f *GetOrderItemsApprovalsFilter) GetQuery() url.Values {
+	q := url.Values{}
+	utils.AddToQueryIfSet(q, "NextToken", f.NextToken)
+	utils.AddToQueryIfSet(q, "ItemApprovalTypes", utils.MapToCommaString(f.ItemApprovalTypes))
+	utils.AddToQueryIfSet(q, "ItemApprovalStatus", utils.MapToCommaString(f.ItemApprovalStatus))
+	return q
+}
+
+type UpdateOrderApprovalsRequest struct {
+	Approver                   string                      `json:"Approver,omitempty"`
+	OrderItemsApprovalRequests []OrderItemsApprovalRequest `json:"OrderItemsApprovalRequests,omitempty"`
+}
+
+type OrderItemsApprovalRequest struct {
+	OrderItemID    string             `json:"OrderItemId,omitempty"`
+	ApprovalAction ItemApprovalAction `json:"ApprovalAction,omitempty"`
+}
+
+type ItemApprovalAction struct {
+	ActionType ActionType `json:"ActionType,omitempty"`
+	Comment    string     `json:"Comment,omitempty"`
+	Changes    Changes    `json:"Changes,omitempty"`
+}
+
+type ActionType string
+
+const (
+	Approve            ActionType = "APPROVE"
+	Decline            ActionType = "DECLINE"
+	ApproveWithChanges ActionType = "APPROVE_WITH_CHANGES"
+)
+
+type Changes struct {
+	ItemPrice     Money          `json:"itemPrice,omitempty"`
+	Quantity      int            `json:"quantity,omitempty"`
+	SubstitutedBy ItemIdentifier `json:"substitutedBy,omitempty"`
+}
+
+type ItemIdentifier struct {
+	IdentifierType IdentifierType `json:"identifierType,omitempty"`
+	Identifier     string         `json:"identifier,omitempty"`
+}
+
+type IdentifierType string
+
+const (
+	ASIN       IdentifierType = "ASIN"
+	SellerSKU  IdentifierType = "SELLER_SKU"
+	ExternalID IdentifierType = "EXTERNAL_ID"
+)
+
+type ConfirmShipmentRequest struct {
+	PackageDetail       PackageDetail           `json:"packageDetail,omitempty"`
+	CodCollectionMethod CodCollectionMethod     `json:"codCollectionMethod,omitempty"`
+	MarketplaceID       constants.MarketplaceID `json:"marketplaceId,omitempty"`
+}
+
+type PackageDetail struct {
+	PackageReferenceID     string                     `json:"packageReferenceId,omitempty"`
+	CarrierCode            string                     `json:"carrierCode,omitempty"`
+	CarrierName            string                     `json:"carrierName,omitempty"`
+	ShippingMethod         string                     `json:"shippingMethod,omitempty"`
+	TrackingNumber         string                     `json:"trackingNumber,omitempty"`
+	ShipDate               string                     `json:"shipDate,omitempty"`
+	ShipFromSupplySourceID string                     `json:"shipFromSupplySourceId,omitempty"`
+	OrderItems             []ConfirmShipmentOrderItem `json:"orderItems,omitempty"`
+}
+type ConfirmShipmentOrderItem struct {
+	OrderItemID       string   `json:"orderItemId,omitempty"`
+	Quantity          int      `json:"quantity,omitempty"`
+	TransparencyCodes []string `json:"transparencyCodes,omitempty"`
+}
+
+type CodCollectionMethod string
+
+const DirectPayment CodCollectionMethod = "DirectPayment"
+
+// ---
+
+type OtherDeliveryAttribute string
+
+const (
+	HasAccessPoint OtherDeliveryAttribute = "HAS_ACCESS_POINT"
+	PalletEnabled  OtherDeliveryAttribute = "PALLET_ENABLED"
+	PalletDisabled OtherDeliveryAttribute = "PALLET_DISABLED"
+)
+
+var AllowedOtherDeliveryAttributes = utils.NewSet[OtherDeliveryAttribute](
+	HasAccessPoint,
+	PalletEnabled,
+	PalletDisabled,
+)
+
+func (v *OtherDeliveryAttribute) UnmarshalJSON(src []byte) error {
+	v, err := utils.UnmarshalJSONEnum[OtherDeliveryAttribute](src, AllowedOtherDeliveryAttributes)
+	return err
+}
+
+type DeliveryPreferences struct {
+	// Drop-off location selected by the customer.
+	DropOffLocation       *string                `json:"DropOffLocation,omitempty"`
+	PreferredDeliveryTime *PreferredDeliveryTime `json:"PreferredDeliveryTime,omitempty"`
+	// Enumerated list of miscellaneous delivery attributes associated with the shipping address.
+	OtherAttributes []OtherDeliveryAttribute `json:"OtherAttributes,omitempty"`
+	// Building instructions, nearby landmark or navigation instructions.
+	AddressInstructions *string `json:"AddressInstructions,omitempty"`
+}
+
+type OpenTimeInterval struct {
+	// The hour when the business opens or closes.
+	Hour *int32 `json:"Hour,omitempty"`
+	// The minute when the business opens or closes.
+	Minute *int32 `json:"Minute,omitempty"`
+}
+
+type ItemApprovalActionChanges struct {
+	ItemPrice *Money `json:"ItemPrice,omitempty"`
+	// Quantity approved. If substitutedBy is specified, this value applies to the substitution item.
+	Quantity      *int32          `json:"Quantity,omitempty"`
+	SubstitutedBy *ItemIdentifier `json:"SubstitutedBy,omitempty"`
+}
+
+type BusinessHours struct {
+	// Day of the week.
+	DayOfWeek *string `json:"DayOfWeek,omitempty"`
+	// Time window during the day when the business is open.
+	OpenIntervals []OpenInterval `json:"OpenIntervals,omitempty"`
+}
+
+type ExceptionDates struct {
+	// Date when the business is closed, in ISO-8601 date format.
+	ExceptionDate *string `json:"ExceptionDate,omitempty"`
+	// Boolean indicating if the business is closed or open on that date.
+	IsOpen *bool `json:"IsOpen,omitempty"`
+	// Time window during the day when the business is open.
+	OpenIntervals []OpenInterval `json:"OpenIntervals,omitempty"`
+}
+
+type OrderItemApprovalRequest struct {
+	// The unique identifier of the order item.
+	OrderItemId    string             `json:"OrderItemId"`
+	ApprovalAction ItemApprovalAction `json:"ApprovalAction"`
+}
+
+type OpenInterval struct {
+	StartTime *OpenTimeInterval `json:"StartTime,omitempty"`
+	EndTime   *OpenTimeInterval `json:"EndTime,omitempty"`
+}
+
+type OrderItemApprovals struct {
+	// The unique identifier of the order item.
+	OrderItemId    string             `json:"OrderItemId"`
+	ApprovalType   ItemApprovalType   `json:"ApprovalType"`
+	ApprovalStatus ItemApprovalStatus `json:"ApprovalStatus"`
+	ItemApprovals  []ItemApproval     `json:"ItemApprovals"`
+}
+
+type ItemApprovalContext struct {
+	ApprovalType   ItemApprovalType   `json:"ApprovalType"`
+	ApprovalStatus ItemApprovalStatus `json:"ApprovalStatus"`
+	// List of additional data elements supporting the approval process. Check the applicable restrictions at the specific approval type schemas.
+	ApprovalSupportData []ApprovalSupportDataElement `json:"ApprovalSupportData,omitempty"`
+}
+
+type ItemApproval struct {
+	// Sequence number of the item approval. Each ItemApproval gets its sequenceId automatically from a monotonic increasing function.
+	SequenceId int32 `json:"SequenceId"`
+	// Timestamp when the ItemApproval was recorded by Amazon's internal order approvals system. In ISO 8601 date time format.
+	Timestamp string `json:"Timestamp"`
+	// High level actors involved in the approval process.
+	Actor string `json:"Actor"`
+	// Person or system that triggers the approval actions on behalf of the actor.
+	Approver       *string            `json:"Approver,omitempty"`
+	ApprovalAction ItemApprovalAction `json:"ApprovalAction"`
+	// Status of approval action.
+	ApprovalActionProcessStatus string `json:"ApprovalActionProcessStatus"`
+	// Optional message to communicate optional additional context about the current status of the approval action.
+	ApprovalActionProcessStatusMessage *string `json:"ApprovalActionProcessStatusMessage,omitempty"`
+}
+
+type ApprovalSupportDataElement struct {
+	// Name of the approval support element. Allowed names are defined in specific approval types schemas.
+	Name string `json:"Name"`
+	// String value of the approval support element.
+	Value string `json:"Value"`
+}
+
+type PreferredDeliveryTime struct {
+	// Business hours when the business is open for deliveries.
+	BusinessHours []BusinessHours `json:"BusinessHours,omitempty"`
+	// Dates when the business is closed in the next 30 days.
+	ExceptionDates []ExceptionDates `json:"ExceptionDates,omitempty"`
 }

@@ -5,7 +5,7 @@ Golang client implementation to the [Amazon SP-API](https://developer-docs.amazo
 ## Installation
 
 ```shell
-go get -u https://github.com/fond-of-vertigo/amazon-sp-api
+go get -u github.com/fond-of-vertigo/amazon-sp-api
 ```
 
 ## API-Endpoints coverage
