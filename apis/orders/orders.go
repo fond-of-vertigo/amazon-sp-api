@@ -140,32 +140,29 @@ func (a *API) GetOrderItemsApprovals(orderID string, filter GetOrderItemsApprova
 }
 
 // UpdateOrderItemsApprovals updates the oder items approvals for the specified order.
-func (a *API) UpdateOrderItemsApprovals(orderID string, payload *UpdateOrderApprovalsRequest) error {
+func (a *API) UpdateOrderItemsApprovals(orderID string, payload *UpdateOrderApprovalsRequest) (*apis.CallResponse[types.Nil], error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = apis.NewCall[types.Nil](http.MethodPost, pathPrefix+"/orders/"+orderID+"/orderItems/approvals").
+	return apis.NewCall[types.Nil](http.MethodPost, pathPrefix+"/orders/"+orderID+"/orderItems/approvals").
 		WithBody(body).
 		WithParseErrorListOnError(true).
 		WithRateLimit(5, time.Second).
 		Execute(a.httpClient)
-
-	return err
 }
 
 // ConfirmShipment updates the shipment status for the specified order.
-func (a *API) ConfirmShipment(orderID string, payload *ConfirmShipmentRequest) error {
+func (a *API) ConfirmShipment(orderID string, payload *ConfirmShipmentRequest) (*apis.CallResponse[types.Nil], error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = apis.NewCall[types.Nil](http.MethodPost, pathPrefix+"/orders/"+orderID+"/shipmentConfirmation").
+	return apis.NewCall[types.Nil](http.MethodPost, pathPrefix+"/orders/"+orderID+"/shipmentConfirmation").
 		WithBody(body).
 		WithParseErrorListOnError(true).
 		WithRateLimit(2, time.Second).
 		Execute(a.httpClient)
-	return err
 }
