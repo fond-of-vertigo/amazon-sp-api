@@ -36,5 +36,6 @@ func (t *api) CreateRestrictedDataTokenRequest(restrictedResources *CreateRestri
 	return apis.NewCall[CreateRestrictedDataTokenResponse](http.MethodPost, pathPrefix+"/restrictedDataToken").
 		WithBody(body).
 		WithRateLimiter(t.RateLimitCreateRestrictedDataToken).
+		WithParseErrorListOnError(true).
 		Execute(t.HttpClient)
 }
