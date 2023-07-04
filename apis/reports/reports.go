@@ -3,86 +3,43 @@ package reports
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fond-of-vertigo/amazon-sp-api/apis"
-	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 	"go/types"
-	"golang.org/x/time/rate"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/apis"
+	"github.com/fond-of-vertigo/amazon-sp-api/httpx"
 )
 
 const pathPrefix = "/reports/2021-06-30"
 
-type API interface {
-	// GetReports returns report details for the reports that match the filters that you specify.
-	// filter are optional and can be set to nil
-	GetReports(filter *GetReportsFilter) (*apis.CallResponse[GetReportsResponse], error)
-	// CreateReport creates a report and returns the reportID.
-	CreateReport(specification *CreateReportSpecification) (*apis.CallResponse[CreateReportResponse], error)
-	// GetReport returns report details (including the reportDocumentID, if available) for the report that you specify.
-	GetReport(reportID string) (*apis.CallResponse[GetReportResponse], error)
-	// CancelReport returns report schedule details that match the filters that you specify.
-	// reportTypes is list of report types used to filter report schedules. This is optional can can be nil.
-	CancelReport(reportID string) error
-	// GetReportSchedules returns report schedule details that match the filters that you specify.
-	// reportTypes is list of report types used to filter report schedules. This is optional can can be nil.
-	GetReportSchedules(reportTypes []string) (*apis.CallResponse[GetReportsResponse], error)
-	// CreateReportSchedule creates a report schedule.
-	// If a report schedule with the same report type and marketplace IDs already exists,
-	// it will be cancelled and replaced with this one.
-	CreateReportSchedule(specification *CreateReportScheduleSpecification) (*apis.CallResponse[CreateReportScheduleResponse], error)
-	// GetReportSchedule returns report schedule details for the report schedule that you specify.
-	GetReportSchedule(reportScheduleID string) (*apis.CallResponse[GetReportScheduleResponse], error)
-	// CancelReportSchedule cancels the report schedule that you specify.
-	CancelReportSchedule(reportScheduleID string) error
-	// GetReportDocument returns the information required for retrieving a report document's contents.
-	// a restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
-	GetReportDocument(reportDocumentID string, restrictedDataToken *string) (*apis.CallResponse[GetReportDocumentResponse], error)
+type API struct {
+	httpClient *httpx.Client
 }
 
-type api struct {
-	HttpClient                    httpx.Client
-	RateLimitGetReports           *rate.Limiter
-	RateLimitCreateReport         *rate.Limiter
-	RateLimitGetReport            *rate.Limiter
-	RateLimitCancelReport         *rate.Limiter
-	RateLimitGetReportSchedules   *rate.Limiter
-	RateLimitCreateReportSchedule *rate.Limiter
-	RateLimitGetReportSchedule    *rate.Limiter
-	RateLimitCancelReportSchedule *rate.Limiter
-	RateLimitGetReportDocument    *rate.Limiter
-}
-
-func NewAPI(httpClient httpx.Client) API {
-
-	return &api{
-		HttpClient:                    httpClient,
-		RateLimitGetReports:           rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitCreateReport:         rate.NewLimiter(rate.Every(time.Microsecond*16700), 15),
-		RateLimitGetReport:            rate.NewLimiter(rate.Every(time.Second*2), 15),
-		RateLimitCancelReport:         rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitGetReportSchedules:   rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitCreateReportSchedule: rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitGetReportSchedule:    rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitCancelReportSchedule: rate.NewLimiter(rate.Every(time.Microsecond*22200), 10),
-		RateLimitGetReportDocument:    rate.NewLimiter(rate.Every(time.Microsecond*22200), 15),
+func NewAPI(httpClient *httpx.Client) *API {
+	return &API{
+		httpClient: httpClient,
 	}
 }
 
-func (r *api) GetReports(filter *GetReportsFilter) (*apis.CallResponse[GetReportsResponse], error) {
-	if filter.pageSize < 1 {
-		filter.pageSize = 10
+// GetReports returns report details for the reports that match the filters that you specify.
+// filter are optional and can be set to nil
+func (r *API) GetReports(filter *GetReportsFilter) (*apis.CallResponse[GetReportsResponse], error) {
+	if filter.PageSize < 1 {
+		filter.PageSize = 10
 	}
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/reports").
 		WithQueryParams(filter.GetQuery()).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReports).
-		Execute(r.HttpClient)
+		WithRateLimit(0.0222, time.Second).
+		Execute(r.httpClient)
 }
 
-func (r *api) CreateReport(specification *CreateReportSpecification) (*apis.CallResponse[CreateReportResponse], error) {
+// CreateReport creates a report and returns the reportID.
+func (r *API) CreateReport(specification *CreateReportSpecification) (*apis.CallResponse[CreateReportResponse], error) {
 	body, err := json.Marshal(specification)
 	if err != nil {
 		return nil, err
@@ -90,25 +47,30 @@ func (r *api) CreateReport(specification *CreateReportSpecification) (*apis.Call
 	return apis.NewCall[CreateReportResponse](http.MethodPost, pathPrefix+"/reports").
 		WithBody(body).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitCreateReport).
-		Execute(r.HttpClient)
+		WithRateLimit(0.0167, time.Second).
+		Execute(r.httpClient)
 }
 
-func (r *api) GetReport(reportID string) (*apis.CallResponse[GetReportResponse], error) {
+// GetReport returns report details (including the reportDocumentID, if available) for the report that you specify.
+func (r *API) GetReport(reportID string) (*apis.CallResponse[GetReportResponse], error) {
 	return apis.NewCall[GetReportResponse](http.MethodGet, pathPrefix+"/reports/"+reportID).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReport).
-		Execute(r.HttpClient)
+		WithRateLimit(2.0, time.Second).
+		Execute(r.httpClient)
 }
 
-func (r *api) CancelReport(reportID string) error {
+// CancelReport returns report schedule details that match the filters that you specify.
+// reportTypes is list of report types used to filter report schedules. This is optional can can be nil.
+func (r *API) CancelReport(reportID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/reports/"+reportID).
-		WithRateLimiter(r.RateLimitCancelReport).
-		Execute(r.HttpClient)
+		WithRateLimit(0.0222, time.Second).
+		Execute(r.httpClient)
 	return err
 }
 
-func (r *api) GetReportSchedules(reportTypes []string) (*apis.CallResponse[GetReportsResponse], error) {
+// GetReportSchedules returns report schedule details that match the filters that you specify.
+// reportTypes is list of report types used to filter report schedules. This is optional can can be nil.
+func (r *API) GetReportSchedules(reportTypes []string) (*apis.CallResponse[GetReportsResponse], error) {
 	if len(reportTypes) > 10 {
 		return nil, fmt.Errorf("reportTypes cannot contain more than 10 reportTypes")
 	}
@@ -117,11 +79,14 @@ func (r *api) GetReportSchedules(reportTypes []string) (*apis.CallResponse[GetRe
 	return apis.NewCall[GetReportsResponse](http.MethodGet, pathPrefix+"/schedules").
 		WithQueryParams(params).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReportSchedules).
-		Execute(r.HttpClient)
+		WithRateLimit(0.0222, time.Second).
+		Execute(r.httpClient)
 }
 
-func (r *api) CreateReportSchedule(specification *CreateReportScheduleSpecification) (*apis.CallResponse[CreateReportScheduleResponse], error) {
+// CreateReportSchedule creates a report schedule.
+// If a report schedule with the same report type and marketplace IDs already exists,
+// it will be cancelled and replaced with this one.
+func (r *API) CreateReportSchedule(specification *CreateReportScheduleSpecification) (*apis.CallResponse[CreateReportScheduleResponse], error) {
 	body, err := json.Marshal(specification)
 	if err != nil {
 		return nil, err
@@ -129,28 +94,32 @@ func (r *api) CreateReportSchedule(specification *CreateReportScheduleSpecificat
 	return apis.NewCall[CreateReportScheduleResponse](http.MethodPost, pathPrefix+"/schedules").
 		WithBody(body).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitCreateReportSchedule).
-		Execute(r.HttpClient)
+		WithRateLimit(0.0222, time.Second).
+		Execute(r.httpClient)
 }
 
-func (r *api) GetReportSchedule(reportScheduleID string) (*apis.CallResponse[GetReportScheduleResponse], error) {
+// GetReportSchedule returns report schedule details for the report schedule that you specify.
+func (r *API) GetReportSchedule(reportScheduleID string) (*apis.CallResponse[GetReportScheduleResponse], error) {
 	return apis.NewCall[GetReportScheduleResponse](http.MethodGet, pathPrefix+"/schedules/"+reportScheduleID).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReportSchedule).
-		Execute(r.HttpClient)
+		WithRateLimit(0.0222, time.Second).
+		Execute(r.httpClient)
 }
 
-func (r *api) CancelReportSchedule(reportScheduleID string) error {
+// CancelReportSchedule cancels the report schedule that you specify.
+func (r *API) CancelReportSchedule(reportScheduleID string) error {
 	_, err := apis.NewCall[types.Nil](http.MethodDelete, pathPrefix+"/schedules/"+reportScheduleID).
-		WithRateLimiter(r.RateLimitCancelReportSchedule).
-		Execute(r.HttpClient)
+		WithRateLimit(0.0222, time.Second).
+		Execute(r.httpClient)
 	return err
 }
 
-func (r *api) GetReportDocument(reportDocumentID string, restrictedDataToken *string) (*apis.CallResponse[GetReportDocumentResponse], error) {
+// GetReportDocument returns the information required for retrieving a report document's contents.
+// a restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
+func (r *API) GetReportDocument(reportDocumentID string, restrictedDataToken *string) (*apis.CallResponse[GetReportDocumentResponse], error) {
 	return apis.NewCall[GetReportDocumentResponse](http.MethodGet, pathPrefix+"/documents/"+reportDocumentID).
 		WithRestrictedDataToken(restrictedDataToken).
 		WithParseErrorListOnError(true).
-		WithRateLimiter(r.RateLimitGetReportDocument).
-		Execute(r.HttpClient)
+		WithRateLimit(0.0167, time.Second).
+		Execute(r.httpClient)
 }

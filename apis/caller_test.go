@@ -3,15 +3,17 @@ package apis
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 	"io"
 	"net/http"
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
 )
 
-type dummyHttpClient struct {
+type dummyHTTPClient struct {
 	endpoint constants.Endpoint
 	req      *http.Request
 	resp     *http.Response
@@ -22,13 +24,15 @@ type dummyBody struct {
 	Number  float64
 }
 
-func (r *dummyHttpClient) Do(req *http.Request) (*http.Response, error) {
+func (r *dummyHTTPClient) Do(req *http.Request) (*http.Response, error) {
 	r.req = req
 	r.resp.Request = req
 	return r.resp, r.errResp
 }
-func (r *dummyHttpClient) GetEndpoint() constants.Endpoint {
+func (r *dummyHTTPClient) GetEndpoint() constants.Endpoint {
 	return r.endpoint
+}
+func (r *dummyHTTPClient) Close() {
 }
 
 func Test_call_Execute(t *testing.T) {
@@ -37,10 +41,8 @@ func Test_call_Execute(t *testing.T) {
 		endpoint            constants.Endpoint
 		restrictedDataToken string
 		url                 string
-		call                call[any]
 		queryParams         url.Values
 		reqBodyObject       any
-		parseErrList        bool
 	}
 	type want struct {
 		url  string
@@ -157,7 +159,7 @@ func Test_call_Execute(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			client := &dummyHttpClient{
+			client := &dummyHTTPClient{
 				endpoint: tt.args.endpoint,
 				resp:     mockResp,
 			}
@@ -198,7 +200,7 @@ func Test_call_Execute(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if bytes.Compare(gotReqBodyBytes, reqBodyBytes) != 0 {
+			if !bytes.Equal(gotReqBodyBytes, reqBodyBytes) {
 				t.Errorf("Execute(): request body different.")
 				return
 			}
@@ -225,6 +227,7 @@ func Test_call_Execute(t *testing.T) {
 		})
 	}
 }
+
 func diff(want any, got any) bool {
 	if want == nil && !reflect.ValueOf(want).IsNil() {
 		return true
@@ -235,6 +238,7 @@ func diff(want any, got any) bool {
 	}
 	return false
 }
+
 func mockResponse(callResp *CallResponse[dummyBody]) (*http.Response, error) {
 	if callResp.ErrorList != nil {
 		bodyBytes, err := getJSONBytes(callResp.ErrorList)
@@ -264,4 +268,32 @@ func getJSONBytes(obj any) ([]byte, error) {
 		return []byte{}, nil
 	}
 	return json.Marshal(obj)
+}
+
+func Test_calcWaitTimeByRateLimit(t *testing.T) {
+	type args struct {
+		callsPer float32
+		duration time.Duration
+	}
+	tests := []struct {
+		name string
+		args args
+		want time.Duration
+	}{{
+		name: "0.5 req per sec, wait 2 seconds",
+		args: args{0.5, time.Second},
+		want: 2 * time.Second,
+	}, {
+		name: "2 req per sec, wait 500ms",
+		args: args{2, time.Second},
+		want: 500 * time.Millisecond,
+	},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := calcWaitTimeByRateLimit(tt.args.callsPer, tt.args.duration); got != tt.want {
+				t.Errorf("calcWaitTimeByRateLimit() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
