@@ -88,10 +88,8 @@ func (a *Call[responseType]) Execute(httpClient HTTPClient) (*CallResponse[respo
 		}
 		return callResp, nil
 	}
-	if resp.ContentLength > 0 {
-		if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
-			return nil, err
-		}
+	if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
+		return nil, err
 	}
 
 	return callResp, nil
@@ -160,12 +158,12 @@ func (r *CallResponse[any]) ErrorsAsString() string {
 }
 
 func unmarshalBody(resp *http.Response, into any) error {
-	if resp.ContentLength == 0 {
-		return nil
-	}
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
+	}
+	if len(bodyBytes) == 0 {
+		return nil
 	}
 	return json.Unmarshal(bodyBytes, into)
 }
