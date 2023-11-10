@@ -23,6 +23,7 @@ type Config struct {
 	RoleArn            string
 	Endpoint           constants.Endpoint
 	Log                logger.Logger
+	HTTPClient         *http.Client
 }
 
 type Client struct {
@@ -40,8 +41,13 @@ func (s *Client) Close() {
 }
 
 func NewClient(config Config) (*Client, error) {
+	hc := config.HTTPClient
+	if config.HTTPClient == nil {
+		hc = http.DefaultClient
+	}
+
 	clientConfig := httpx.ClientConfig{
-		HTTPClient:         &http.Client{},
+		HTTPClient:         hc,
 		Endpoint:           config.Endpoint,
 		IAMUserAccessKeyID: config.IAMUserAccessKeyID,
 		IAMUserSecretKey:   config.IAMUserSecretKey,
@@ -51,21 +57,22 @@ func NewClient(config Config) (*Client, error) {
 			RefreshToken: config.RefreshToken,
 			ClientID:     config.ClientID,
 			ClientSecret: config.ClientSecret,
+			HTTPClient:   hc,
 			Logger:       config.Log,
 		},
 	}
 
-	httpClient, err := httpx.NewClient(clientConfig)
+	httpxClient, err := httpx.NewClient(clientConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
-		httpClient:  httpClient,
-		FinancesAPI: finances.NewAPI(httpClient),
-		FeedsAPI:    feeds.NewAPI(httpClient),
-		OrdersAPI:   orders.NewAPI(httpClient),
-		ReportsAPI:  reports.NewAPI(httpClient),
-		TokenAPI:    tokens.NewAPI(httpClient),
+		httpClient:  httpxClient,
+		FinancesAPI: finances.NewAPI(httpxClient),
+		FeedsAPI:    feeds.NewAPI(httpxClient),
+		OrdersAPI:   orders.NewAPI(httpxClient),
+		ReportsAPI:  reports.NewAPI(httpxClient),
+		TokenAPI:    tokens.NewAPI(httpxClient),
 	}, nil
 }

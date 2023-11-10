@@ -15,10 +15,8 @@ type mockTokenUpdater struct {
 func (m *mockTokenUpdater) GetAccessToken() string {
 	return m.ReturnAccessToken
 }
-func (m *mockTokenUpdater) RunInBackground() error {
-	return nil
-}
-func (m *mockTokenUpdater) Stop() {
+func (m *mockTokenUpdater) RunInBackground() (func(), error) {
+	return func() {}, nil
 }
 
 func Test_httpClient_addAccessToken(t *testing.T) {
@@ -27,7 +25,6 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 	reqWithRDT.Header.Add(constants.AccessTokenHeader, "EXISTING-RDT")
 
 	type fields struct {
-		HTTPClient   *http.Client
 		TokenUpdater *mockTokenUpdater
 	}
 	tests := []struct {
@@ -39,7 +36,6 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 		{
 			name: "AccessToken should not replace an existing (e.g. RestrictedDataToken)",
 			fields: fields{
-				HTTPClient:   nil,
 				TokenUpdater: &mockTokenUpdater{ReturnAccessToken: "ACCESS-TOKEN-XY"},
 			},
 			request:         reqWithRDT,
@@ -48,7 +44,6 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 		{
 			name: "AccessToken should be inserted if no RestrictedDataToken is set",
 			fields: fields{
-				HTTPClient:   nil,
 				TokenUpdater: &mockTokenUpdater{ReturnAccessToken: "ACCESS-TOKEN-XY"},
 			},
 			request:         reqWithoutRDT,
@@ -58,7 +53,7 @@ func Test_httpClient_addAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h := &Client{
-				httpClient:   tt.fields.HTTPClient,
+				httpClient:   nil,
 				tokenUpdater: tt.fields.TokenUpdater,
 			}
 			h.addAccessTokenToHeader(tt.request)

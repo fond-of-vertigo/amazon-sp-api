@@ -148,7 +148,7 @@ func (a *API) UpdateOrderItemsApprovals(orderID string, payload *UpdateOrderAppr
 
 	return apis.NewCall[types.Nil](http.MethodPost, pathPrefix+"/orders/"+orderID+"/orderItems/approvals").
 		WithBody(body).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(5, time.Second).
 		Execute(a.httpClient)
 }
@@ -162,7 +162,7 @@ func (a *API) ConfirmShipment(orderID string, payload *ConfirmShipmentRequest) (
 
 	return apis.NewCall[types.Nil](http.MethodPost, pathPrefix+"/orders/"+orderID+"/shipmentConfirmation").
 		WithBody(body).
-		WithParseErrorListOnError(true).
+		WithParseErrorListOnError().
 		WithRateLimit(2, time.Second).
 		Execute(a.httpClient)
 }

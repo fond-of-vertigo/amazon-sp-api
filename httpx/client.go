@@ -17,7 +17,7 @@ import (
 )
 
 type ClientConfig struct {
-	HTTPClient         *http.Client
+	HTTPClient         HTTPRequester
 	TokenUpdaterConfig TokenUpdaterConfig
 	IAMUserAccessKeyID string
 	IAMUserSecretKey   string
@@ -26,8 +26,8 @@ type ClientConfig struct {
 	Endpoint           constants.Endpoint
 }
 
-func NewClient(config ClientConfig) (*Client, error) {
-	c := &Client{
+func NewClient(config ClientConfig) (c *Client, err error) {
+	c = &Client{
 		httpClient: config.HTTPClient,
 		region:     config.Region,
 		roleArn:    config.RoleArn,
@@ -35,28 +35,40 @@ func NewClient(config ClientConfig) (*Client, error) {
 	}
 
 	c.tokenUpdater = newTokenUpdater(config.TokenUpdaterConfig)
-	if err := c.tokenUpdater.RunInBackground(); err != nil {
+	if c.tokenUpdaterCancelFunc, err = c.tokenUpdater.RunInBackground(); err != nil {
 		return nil, err
 	}
 
-	var err error
-	if c.awsSession, err = session.NewSession(
-		&aws.Config{Credentials: credentials.NewStaticCredentials(config.IAMUserAccessKeyID, config.IAMUserSecretKey, "")},
-	); err != nil {
+	awsCfg := &aws.Config{}
+	awsCfg.Credentials = credentials.NewStaticCredentials(config.IAMUserAccessKeyID, config.IAMUserSecretKey, "")
+
+	c.awsSession, err = session.NewSession(awsCfg)
+	if err != nil {
 		return nil, err
 	}
 	return c, nil
 }
 
 type Client struct {
-	tokenUpdater      tokenUpdater
-	httpClient        *http.Client
-	endpoint          constants.Endpoint
-	region            constants.Region
-	roleArn           string
-	aws4Signer        *v4.Signer
-	awsStsCredentials *sts.Credentials
-	awsSession        *session.Session
+	tokenUpdater           tokenUpdater
+	tokenUpdaterCancelFunc func()
+	httpClient             HTTPRequester
+	endpoint               constants.Endpoint
+	region                 constants.Region
+	roleArn                string
+	aws4Signer             *v4.Signer
+	awsStsCredentials      *sts.Credentials
+	awsSession             *session.Session
+}
+
+type HTTPRequester interface {
+	Do(req *http.Request) (*http.Response, error)
+	Post(url string, bodyType string, body io.Reader) (*http.Response, error)
+}
+
+type tokenUpdater interface {
+	GetAccessToken() string
+	RunInBackground() (cancel func(), err error)
 }
 
 func (h *Client) Do(req *http.Request) (*http.Response, error) {
@@ -74,7 +86,7 @@ func (h *Client) GetEndpoint() constants.Endpoint {
 }
 
 func (h *Client) Close() {
-	h.tokenUpdater.Stop()
+	h.tokenUpdaterCancelFunc()
 }
 
 func (h *Client) addAccessTokenToHeader(req *http.Request) {
@@ -109,6 +121,7 @@ func (h *Client) signRequest(r *http.Request) error {
 
 	return err
 }
+
 func (h *Client) RefreshCredentials() error {
 
 	roleSessionName := uuid.New().String()
