@@ -159,7 +159,7 @@ var AllowedEasyShipShipmentStatus = utils.NewSet[EasyShipShipmentStatus](
 )
 
 func (v *EasyShipShipmentStatus) UnmarshalJSON(src []byte) error {
-	v, err := utils.UnmarshalJSONEnum[EasyShipShipmentStatus](src, AllowedEasyShipShipmentStatus)
+	_, err := utils.UnmarshalJSONEnum[EasyShipShipmentStatus](src, AllowedEasyShipShipmentStatus)
 	return err
 }
 
@@ -185,7 +185,7 @@ var AllowedElectronicInvoiceStatus = utils.NewSet[ElectronicInvoiceStatus](
 )
 
 func (v *ElectronicInvoiceStatus) UnmarshalJSON(src []byte) error {
-	v, err := utils.UnmarshalJSONEnum[ElectronicInvoiceStatus](src, AllowedElectronicInvoiceStatus)
+	_, err := utils.UnmarshalJSONEnum[ElectronicInvoiceStatus](src, AllowedElectronicInvoiceStatus)
 	return err
 }
 
@@ -582,7 +582,7 @@ var AllowedShipmentStatus = utils.NewSet[ShipmentStatus](
 )
 
 func (v *ShipmentStatus) UnmarshalJSON(src []byte) error {
-	v, err := utils.UnmarshalJSONEnum[ShipmentStatus](src, AllowedShipmentStatus)
+	_, err := utils.UnmarshalJSONEnum[ShipmentStatus](src, AllowedShipmentStatus)
 	return err
 }
 
@@ -659,7 +659,7 @@ var AllowedVerificationStatus = utils.NewSet[VerificationStatus](
 )
 
 func (v *VerificationStatus) UnmarshalJSON(src []byte) error {
-	v, err := utils.UnmarshalJSONEnum[VerificationStatus](src, AllowedVerificationStatus)
+	_, err := utils.UnmarshalJSONEnum[VerificationStatus](src, AllowedVerificationStatus)
 	return err
 }
 
@@ -825,7 +825,7 @@ const LeonardiApproval ItemApprovalType = "LEONARDI_APPROVAL"
 var AllowedItemApprovalTypes = utils.NewSet[ItemApprovalType](LeonardiApproval)
 
 func (v *ItemApprovalType) UnmarshalJSON(src []byte) error {
-	v, err := utils.UnmarshalJSONEnum[ItemApprovalType](src, AllowedItemApprovalTypes)
+	_, err := utils.UnmarshalJSONEnum[ItemApprovalType](src, AllowedItemApprovalTypes)
 	return err
 }
 
@@ -850,7 +850,7 @@ var AllowedItemApprovalStatus = utils.NewSet[ItemApprovalStatus](
 )
 
 func (v *ItemApprovalStatus) UnmarshalJSON(src []byte) error {
-	v, err := utils.UnmarshalJSONEnum[ItemApprovalStatus](src, AllowedItemApprovalStatus)
+	_, err := utils.UnmarshalJSONEnum[ItemApprovalStatus](src, AllowedItemApprovalStatus)
 	return err
 }
 
@@ -948,7 +948,7 @@ var AllowedOtherDeliveryAttributes = utils.NewSet[OtherDeliveryAttribute](
 )
 
 func (v *OtherDeliveryAttribute) UnmarshalJSON(src []byte) error {
-	v, err := utils.UnmarshalJSONEnum[OtherDeliveryAttribute](src, AllowedOtherDeliveryAttributes)
+	_, err := utils.UnmarshalJSONEnum[OtherDeliveryAttribute](src, AllowedOtherDeliveryAttributes)
 	return err
 }
 

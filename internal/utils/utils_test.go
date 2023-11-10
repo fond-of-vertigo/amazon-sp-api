@@ -2,11 +2,12 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/fond-of-vertigo/amazon-sp-api/constants"
-	"github.com/google/go-cmp/cmp"
 	"net/url"
 	"reflect"
 	"testing"
+
+	"github.com/fond-of-vertigo/amazon-sp-api/constants"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestFirstNElementsOfSlice(t *testing.T) {
@@ -186,7 +187,7 @@ const (
 var AllowedEnumValues = NewSet[Enum](EnumA, EnumB, EnumC)
 
 func (e *Enum) UnmarshalJSON(b []byte) error {
-	e, err := UnmarshalJSONEnum[Enum](b, AllowedEnumValues)
+	_, err := UnmarshalJSONEnum[Enum](b, AllowedEnumValues)
 	return err
 }
 
