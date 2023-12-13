@@ -14,16 +14,12 @@ import (
 )
 
 type Config struct {
-	ClientID           string
-	ClientSecret       string
-	RefreshToken       string
-	IAMUserAccessKeyID string
-	IAMUserSecretKey   string
-	Region             constants.Region
-	RoleArn            string
-	Endpoint           constants.Endpoint
-	Log                logger.Logger
-	HTTPClient         *http.Client
+	ClientID     string
+	ClientSecret string
+	RefreshToken string
+	Endpoint     constants.Endpoint
+	Log          logger.Logger
+	HTTPClient   *http.Client
 }
 
 type Client struct {
@@ -47,12 +43,8 @@ func NewClient(config Config) (*Client, error) {
 	}
 
 	clientConfig := httpx.ClientConfig{
-		HTTPClient:         hc,
-		Endpoint:           config.Endpoint,
-		IAMUserAccessKeyID: config.IAMUserAccessKeyID,
-		IAMUserSecretKey:   config.IAMUserSecretKey,
-		Region:             config.Region,
-		RoleArn:            config.RoleArn,
+		HTTPClient: hc,
+		Endpoint:   config.Endpoint,
 		TokenUpdaterConfig: httpx.TokenUpdaterConfig{
 			RefreshToken: config.RefreshToken,
 			ClientID:     config.ClientID,
