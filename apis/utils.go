@@ -44,12 +44,13 @@ func mapErrorListToError(errorList *ErrorList) (errs error) {
 }
 
 func unmarshalBody(resp *http.Response, into any) error {
-	if resp.ContentLength == 0 {
-		return nil
-	}
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
+	}
+
+	if len(bodyBytes) == 0 {
+		return nil
 	}
 	return json.Unmarshal(bodyBytes, into)
 }
