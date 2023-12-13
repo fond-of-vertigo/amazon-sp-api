@@ -94,10 +94,8 @@ func (a *Call[responseType]) Execute(httpClient HTTPClient) (*CallResponse[respo
 		return callResp, err
 	}
 
-	if resp.ContentLength > 0 {
-		if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
-			return nil, err
-		}
+	if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
+		return nil, err
 	}
 	return callResp, nil
 }
