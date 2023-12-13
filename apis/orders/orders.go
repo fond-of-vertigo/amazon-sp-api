@@ -27,7 +27,8 @@ func NewAPI(httpClient *httpx.Client) *API {
 // GetOrders returns orders created or updated during the time frame indicated by the specified parameters.
 // You can also apply a range of filtering criteria to narrow the list of orders returned. If NextToken is present,
 // that will be used to retrieve the orders instead of other criteria.
-func (a *API) GetOrders(filter *GetOrdersFilter) (*apis.CallResponse[GetOrdersResponse], error) {
+// A restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
+func (a *API) GetOrders(filter *GetOrdersFilter, restrictedDataToken *string) (*apis.CallResponse[GetOrdersResponse], error) {
 	if len(filter.MarketplaceIDs) > 50 {
 		return nil, errors.New("marketplaceIDs must not contain more than 50 elements")
 	}
@@ -38,13 +39,16 @@ func (a *API) GetOrders(filter *GetOrdersFilter) (*apis.CallResponse[GetOrdersRe
 	return apis.NewCall[GetOrdersResponse](http.MethodGet, pathPrefix+"/orders").
 		WithQueryParams(filter.GetQuery()).
 		WithRateLimit(0.0167, time.Second).
+		WithRestrictedDataToken(restrictedDataToken).
 		Execute(a.httpClient)
 }
 
 // GetOrder Returns the order that you specify.
-func (a *API) GetOrder(orderID string) (*apis.CallResponse[GetOrderResponse], error) {
+// A restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
+func (a *API) GetOrder(orderID string, restrictedDataToken *string) (*apis.CallResponse[GetOrderResponse], error) {
 	return apis.NewCall[GetOrderResponse](http.MethodGet, pathPrefix+"/orders/"+orderID).
 		WithRateLimit(0.0167, time.Second).
+		WithRestrictedDataToken(restrictedDataToken).
 		Execute(a.httpClient)
 }
 
@@ -56,15 +60,18 @@ func (a *API) GetOrderBuyerInfo(orderID string) (*apis.CallResponse[GetOrderBuye
 }
 
 // GetOrderAddress returns the shipping address for the order that you specify.
-func (a *API) GetOrderAddress(orderID string) (*apis.CallResponse[GetOrderAddressResponse], error) {
+// A restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
+func (a *API) GetOrderAddress(orderID string, restrictedDataToken *string) (*apis.CallResponse[GetOrderAddressResponse], error) {
 	return apis.NewCall[GetOrderAddressResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/address").
 		WithRateLimit(0.0167, time.Second).
+		WithRestrictedDataToken(restrictedDataToken).
 		Execute(a.httpClient)
 }
 
 // GetOrderItems returns detailed order item information for the order that you specify.
 // If NextToken is provided, it's used to retrieve the next page of order items.
-func (a *API) GetOrderItems(orderID string, nextToken *string) (*apis.CallResponse[GetOrderItemsResponse], error) {
+// A restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
+func (a *API) GetOrderItems(orderID string, nextToken *string, restrictedDataToken *string) (*apis.CallResponse[GetOrderItemsResponse], error) {
 	params := url.Values{}
 	if nextToken != nil && *nextToken != "" {
 		params.Add("NextToken", *nextToken)
@@ -73,11 +80,13 @@ func (a *API) GetOrderItems(orderID string, nextToken *string) (*apis.CallRespon
 	return apis.NewCall[GetOrderItemsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/orderItems").
 		WithQueryParams(params).
 		WithRateLimit(0.5, time.Second).
+		WithRestrictedDataToken(restrictedDataToken).
 		Execute(a.httpClient)
 }
 
 // GetOrderItemsBuyerInfo returns buyer information for the order items in the order that you specify.
-func (a *API) GetOrderItemsBuyerInfo(orderID string, nextToken *string) (*apis.CallResponse[GetOrderItemsBuyerInfoResponse], error) {
+// A restrictedDataToken is optional and may be passed to receive Personally Identifiable Information (PII).
+func (a *API) GetOrderItemsBuyerInfo(orderID string, nextToken *string, restrictedDataToken *string) (*apis.CallResponse[GetOrderItemsBuyerInfoResponse], error) {
 	params := url.Values{}
 	if nextToken != nil && *nextToken != "" {
 		params.Add("NextToken", *nextToken)
@@ -86,6 +95,7 @@ func (a *API) GetOrderItemsBuyerInfo(orderID string, nextToken *string) (*apis.C
 	return apis.NewCall[GetOrderItemsBuyerInfoResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/orderItems/buyerInfo").
 		WithQueryParams(params).
 		WithRateLimit(0.5, time.Second).
+		WithRestrictedDataToken(restrictedDataToken).
 		Execute(a.httpClient)
 }
 
