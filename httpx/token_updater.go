@@ -65,7 +65,7 @@ func (t *PeriodicTokenUpdater) GetAccessToken() string {
 func (t *PeriodicTokenUpdater) RunInBackground() (cancel func(), err error) {
 	durationNextFetch, err := t.doInitialFetch()
 	if err != nil {
-		return nil, err
+		return func() {}, err
 	}
 
 	ticker := time.NewTicker(durationNextFetch)
