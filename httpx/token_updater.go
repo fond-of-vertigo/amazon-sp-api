@@ -111,9 +111,11 @@ func (t *PeriodicTokenUpdater) doInitialFetch() (time.Duration, error) {
 }
 
 func durationBetweenTokenRequests(token *AccessTokenResponse) time.Duration {
-	secondsToWait := token.ExpiresIn - int(constants.ExpiryDelta/time.Second)
-	durationToWait := time.Duration(secondsToWait) * time.Second
-	return durationToWait
+	expiryDeltaSeconds := int(constants.ExpiryDelta.Seconds())
+	if token.ExpiresIn <= expiryDeltaSeconds {
+		return time.Duration(token.ExpiresIn) * time.Second
+	}
+	return time.Duration(token.ExpiresIn-expiryDeltaSeconds) * time.Second
 }
 
 func (t *PeriodicTokenUpdater) doTokenRequest() (*AccessTokenResponse, error) {
