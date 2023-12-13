@@ -18,15 +18,11 @@ const PollingDelay = time.Second * 5
 func main() {
 	log := logger.New(logger.LvlDebug)
 	c := sp_api.Config{
-		ClientID:           "EXAMPLE_CLIENTID",
-		ClientSecret:       "EXAMPLE_SECRET",
-		RefreshToken:       "EXAMPLE_REFRESHTOKEN",
-		IAMUserAccessKeyID: "EXAMPLE_ACCESSKEY",
-		IAMUserSecretKey:   "EXAMPLE_SECRET",
-		Region:             constants.EUWest,
-		RoleArn:            "EXAMPLE_ROLE",
-		Endpoint:           constants.Europe,
-		Log:                log,
+		ClientID:     "EXAMPLE_CLIENTID",
+		ClientSecret: "EXAMPLE_SECRET",
+		RefreshToken: "EXAMPLE_REFRESHTOKEN",
+		Endpoint:     constants.Europe,
+		Log:          log,
 	}
 
 	client, err := sp_api.NewClient(c)
