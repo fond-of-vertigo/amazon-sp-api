@@ -40,6 +40,7 @@ func (a *API) GetOrders(filter *GetOrdersFilter, restrictedDataToken *string) (*
 		WithQueryParams(filter.GetQuery()).
 		WithRateLimit(0.0167, time.Second).
 		WithRestrictedDataToken(restrictedDataToken).
+		WithParseErrorListOnError().
 		Execute(a.httpClient)
 }
 
