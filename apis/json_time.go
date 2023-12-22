@@ -10,10 +10,13 @@ type JsonTimeISO8601 struct {
 }
 
 func (t JsonTimeISO8601) MarshalJSON() ([]byte, error) {
-	value := "\"" + t.Format(time.RFC3339) + "\""
+	value := "\"" + t.UTC().Format(time.RFC3339) + "\""
 	return []byte(value), nil
 }
 
 func (t JsonTimeISO8601) String() string {
-	return t.Format(time.RFC3339)
+	if t.IsZero() {
+		return ""
+	}
+	return t.UTC().Format(time.RFC3339)
 }
