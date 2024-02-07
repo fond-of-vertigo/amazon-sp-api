@@ -328,7 +328,7 @@ type Order struct {
 	// The order ID value for the order that is being replaced. Returned only if IsReplacementOrder = true.
 	ReplacedOrderId *string `json:"ReplacedOrderId,omitempty"`
 	// When true, this is a replacement order.
-	IsReplacementOrder *string `json:"IsReplacementOrder,omitempty"`
+	IsReplacementOrder *bool `json:"IsReplacementOrder,omitempty"`
 	// Indicates the date by which the seller must respond to the buyer with an estimated ship date. Returned only for Sourcing on Demand orders.
 	PromiseResponseDueDate *string `json:"PromiseResponseDueDate,omitempty"`
 	// When true, the estimated ship date is set for the order. Returned only for Sourcing on Demand orders.
