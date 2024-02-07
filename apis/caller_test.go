@@ -34,6 +34,9 @@ func (r *dummyHTTPClient) GetEndpoint() constants.Endpoint {
 }
 func (r *dummyHTTPClient) Close() {
 }
+func (r *dummyHTTPClient) Unmarshal(resp *http.Response, into any) error {
+	return unmarshalBody(resp, into)
+}
 
 func Test_call_Execute(t *testing.T) {
 	type args struct {

@@ -14,12 +14,13 @@ import (
 )
 
 type Config struct {
-	ClientID     string
-	ClientSecret string
-	RefreshToken string
-	Endpoint     constants.Endpoint
-	Log          logger.Logger
-	HTTPClient   *http.Client
+	ClientID      string
+	ClientSecret  string
+	RefreshToken  string
+	Endpoint      constants.Endpoint
+	Log           logger.Logger
+	HTTPClient    *http.Client
+	UnmarshalFunc httpx.UnmarshalFunc
 }
 
 type Client struct {
@@ -43,8 +44,9 @@ func NewClient(config Config) (*Client, error) {
 	}
 
 	clientConfig := httpx.ClientConfig{
-		HTTPClient: hc,
-		Endpoint:   config.Endpoint,
+		HTTPClient:    hc,
+		Endpoint:      config.Endpoint,
+		UnmarshalFunc: config.UnmarshalFunc,
 		TokenUpdaterConfig: httpx.TokenUpdaterConfig{
 			RefreshToken: config.RefreshToken,
 			ClientID:     config.ClientID,

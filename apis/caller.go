@@ -15,6 +15,7 @@ type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 	GetEndpoint() constants.Endpoint
 	Close()
+	Unmarshal(resp *http.Response, into any) error
 }
 type CallResponse[responseBodyType any] struct {
 	Status       int
@@ -94,7 +95,7 @@ func (a *Call[responseType]) Execute(httpClient HTTPClient) (*CallResponse[respo
 		return callResp, err
 	}
 
-	if err = unmarshalBody(resp, &callResp.ResponseBody); err != nil {
+	if err = httpClient.Unmarshal(resp, &callResp.ResponseBody); err != nil {
 		return nil, err
 	}
 	return callResp, nil
