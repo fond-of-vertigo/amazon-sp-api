@@ -42,6 +42,7 @@ func (a *API) ListFinancialEventsByGroupID(eventGroupID string, filter *ListFina
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/financialEventGroups/"+eventGroupID+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
 		WithRateLimit(0.5, time.Second).
+		WithParseErrorListOnError().
 		Execute(a.httpClient)
 }
 
@@ -54,6 +55,7 @@ func (a *API) ListFinancialEventsByOrderID(orderID string, filter *ListFinancial
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/orders/"+orderID+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
 		WithRateLimit(0.5, time.Second).
+		WithParseErrorListOnError().
 		Execute(a.httpClient)
 }
 
@@ -66,5 +68,6 @@ func (a *API) ListFinancialEvents(filter *ListFinancialEventsFilter) (*apis.Call
 	return apis.NewCall[ListFinancialEventsResponse](http.MethodGet, pathPrefix+"/financialEvents").
 		WithQueryParams(filter.GetQuery()).
 		WithRateLimit(0.5, time.Second).
+		WithParseErrorListOnError().
 		Execute(a.httpClient)
 }
